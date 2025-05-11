@@ -1,0 +1,11 @@
+.cache
+.local/share/Trash
+.Trash
+.thumbnails
+.gvfs
+/proc
+lost+found
+.Private
+/swapfile
+backup-for-cloud/
+Downloads/

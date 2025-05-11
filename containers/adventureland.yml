@@ -1,0 +1,33 @@
+#TEST: Make sure everything is meaninful, check the command from real github repo first
+apiVersion: v1
+kind: Pod
+metadata:
+  name: adventureland-server
+spec:
+  containers:
+    - name: adventureland
+      image: docker.io/library/ubuntu:22.04
+      ports:
+        - containerPort: 80
+        - containerPort: 8022
+      volumeMounts:
+        - mountPath: /srv/adventureland-data
+          name: al-data
+      command: ["/bin/bash", "-c"]
+      args:
+        - |
+          apt update && apt install -y python2.7 python2-pip git nodejs npm lxml && \
+          git clone https://github.com/kaansoral/adventureland && \
+          git clone https://github.com/kaansoral/adventureland-appserver appserver && \
+          cp adventureland/useful/template.secrets.py adventureland/secrets.py && \
+          cp adventureland/useful/template.variables.js adventureland/node/variables.js && \
+          cp adventureland/useful/template.live_variables.js adventureland/node/live_variables.js && \
+          pip2 install flask -t adventureland/lib && \
+          python2.7 appserver/sdk/dev_appserver.py --storage_path=/srv/adventureland-data/storage/ --blobstore_path=/srv/adventureland-data/blobstore/ --datastore_path=/srv/adventureland-data/db.rdbms --host=0.0.0.0 --port=80 adventureland/ --require_indexes --skip_sdk_update_check & \
+          cd adventureland/node && npm install && node server.js EU I 8022
+  volumes:
+    - name: al-data
+      hostPath:
+        path: /srv/adventureland-data
+        type: DirectoryOrCreate
+

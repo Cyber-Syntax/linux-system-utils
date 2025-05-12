@@ -4,9 +4,19 @@
 # Fedora: <dnf count> | Flatpak: <flatpak count>
 
 # ------------- DNF (Fedora) Update Info -------------
-# Use dnf check-update which is the proper way to check for available updates
+# Use dnf check-update with a timeout to prevent hanging on GPG key prompts
 # Exit code 100 means updates are available, 0 means no updates
-dnf_output=$(dnf check-update --refresh 2>/dev/null)
+# Use -y to automatically answer yes to any prompts like GPG key imports
+
+# Create a function to run dnf with a timeout
+run_dnf_with_timeout() {
+  # Use timeout command to kill after 15 seconds if stuck
+  timeout 15 dnf check-update --refresh -y 2>/dev/null
+  return $?
+}
+
+# First try with auto-confirmation for GPG keys
+dnf_output=$(run_dnf_with_timeout)
 dnf_exit=$?
 
 if [ $dnf_exit -eq 0 ]; then
@@ -15,6 +25,9 @@ if [ $dnf_exit -eq 0 ]; then
 elif [ $dnf_exit -eq 100 ]; then
   # Updates available - count actual package lines (excluding headers and empty lines)
   fedora_count=$(echo "$dnf_output" | grep -v "^Last metadata" | grep -v "^$" | grep -v "^Upgrade" | wc -l | tr -d ' ')
+elif [ $dnf_exit -eq 124 ]; then
+  # Exit code 124 means the timeout command killed the process
+  fedora_count="!"  # Use ! to indicate timeout
 else
   # Any other exit code indicates an error
   fedora_count="?"
@@ -53,6 +66,11 @@ fi
 # Show checkmark instead of "0" for better readability
 [ "$fedora_count" = "0" ] && fedora_count="✅"
 [ "$flatpak_count" = "0" ] && flatpak_count="✅"
+
+# Format the error indicators
+[ "$fedora_count" = "!" ] && fedora_count="⏱️" # Timeout indicator
+[ "$fedora_count" = "?" ] && fedora_count="❓" # Error indicator
+[ "$flatpak_count" = "?" ] && flatpak_count="❓" # Error indicator
 
 FEDORA_ICON=$'\uf30a' # FontAwesome Fedora logo
 

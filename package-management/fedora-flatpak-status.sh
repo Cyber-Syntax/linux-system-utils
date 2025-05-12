@@ -63,6 +63,10 @@ else
 fi
 
 # ------------- Combined Output -------------
+# Store original values before formatting for combined status check
+original_fedora="$fedora_count"
+original_flatpak="$flatpak_count"
+
 # Show checkmark instead of "0" for better readability
 [ "$fedora_count" = "0" ] && fedora_count="✅"
 [ "$flatpak_count" = "0" ] && flatpak_count="✅"
@@ -74,4 +78,9 @@ fi
 
 FEDORA_ICON=$'\uf30a' # FontAwesome Fedora logo
 
-echo "$FEDORA_ICON : $fedora_count | 📦: $flatpak_count"
+# If both systems are up-to-date (both original values were "0"), show only a single check mark
+if [ "$original_fedora" = "0" ] && [ "$original_flatpak" = "0" ]; then
+  echo "✅ Up-to-date"
+else
+  echo "$FEDORA_ICON : $fedora_count | 📦: $flatpak_count"
+fi

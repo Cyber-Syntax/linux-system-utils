@@ -1,39 +1,41 @@
-
 #!/bin/bash
 
 # Paths to the files
 FILE_OLD="superProductivity-x86_64(1).AppImage"
 FILE_NEW="superProductivity-x86_64.AppImage"
 
-# Base64 strings
-BASE64_OLD="GSqZL22HcocLRTuJY/ShHVtnyZCq1Cn4Q7ShfQqs9EmS8lsNuJppRnXwt2iYEQ+oTs8mLWhDCegOWDFQHzNsEQ=="
-# BASE64_NEW="OJ3XUc+B+8IiWMjgl3FdotJfWSKuZzRDlMp4EldATbvQBmo83bfblwTjtU4RFG+aICzy7y3x58ji31uL/MwGIg=="
-BASE64_NEW="0FYoma9kltRQregFTzz4HllmODtsnMRg10mAlpW8pTLUT6LeimGQ60ilIHujOLCvlN5If/uTcB6RtVq3ARLBWg=="
+# v12.0.2, sha512sum
+# sha512: SndpKa23Whc58K9AHGMykvMgH/SBaL2ZTsDXh6ilv7sl6eZjYSpQQ2n6Fr/1WZ2hzjgPLtPrF5r5SjlewHdSbA==
+# v13.0.0, sha512sum
+# sha512: NVXO9SPnvs7klqwnH3zJxt7U3+L0T/MDBWtdN/NJEmb6XMVs4IyaAJbRdOld29PjSei9z9xoOEnYOZioHZmk3w==
+BASE64_OLD="SndpKa23Whc58K9AHGMykvMgH/SBaL2ZTsDXh6ilv7sl6eZjYSpQQ2n6Fr/1WZ2hzjgPLtPrF5r5SjlewHdSbA=="
+BASE64_NEW="NVXO9SPnvs7klqwnH3zJxt7U3+L0T/MDBWtdN/NJEmb6XMVs4IyaAJbRdOld29PjSei9z9xoOEnYOZioHZmk3w=="
+
 # Function to calculate and print details for a file
 compare_hashes() {
-    local file=$1
-    local base64_str=$2
+  local file=$1
+  local base64_str=$2
 
-    echo "File: $file"
+  echo "File: $file"
 
-    # Calculate SHA-512 hash
-    local file_hash
-    file_hash=$(sha512sum "$file" | awk '{print $1}')
-    echo "Calculated SHA-512: $file_hash"
+  # Calculate SHA-512 hash
+  local file_hash
+  file_hash=$(sha512sum "$file" | awk '{print $1}')
+  echo "Calculated SHA-512: $file_hash"
 
-    # Decode Base64 and convert to hex
-    local decoded_hex
-    decoded_hex=$(echo "$base64_str" | base64 -d | xxd -p -c 256)
-    echo "Base64-decoded hex: $decoded_hex"
+  # Decode Base64 and convert to hex
+  local decoded_hex
+  decoded_hex=$(echo "$base64_str" | base64 -d | xxd -p -c 256)
+  echo "Base64-decoded hex: $decoded_hex"
 
-    # Compare and print results
-    if [[ "$file_hash" == "$decoded_hex" ]]; then
-        echo "✅ Calculated hash matches the Base64-decoded hex!"
-    else
-        echo "❌ Calculated hash does NOT match the Base64-decoded hex!"
-    fi
+  # Compare and print results
+  if [[ "$file_hash" == "$decoded_hex" ]]; then
+    echo "✅ Calculated hash matches the Base64-decoded hex!"
+  else
+    echo "❌ Calculated hash does NOT match the Base64-decoded hex!"
+  fi
 
-    echo "--------------------------------------------"
+  echo "--------------------------------------------"
 }
 
 # Compare the old version

@@ -1,0 +1,35 @@
+services:
+  stow-test:
+    image: debian:bookworm-slim
+    container_name: stow-test
+    user: "${UID}:${GID}"
+    environment:
+      HOME: "/home/tester"
+      SHELL: "/bin/bash"
+    volumes:
+      # Mount your dotfiles repo read-only
+      - ./test_stow:/home/tester/dotfiles:rw
+
+      # Mount user config simulation
+      - ~/.config:/home/tester/.config:rw
+
+      # Mount common dotfiles
+      - ~/.testrc:/home/tester/.testrc:rw
+      - ~/.testcv:/home/tester/.testcv:rw
+
+      # Optional: scripts to test
+      - ~/Documents/scripts:/home/tester/scripts:rw
+
+    working_dir: /home/tester
+    stdin_open: true
+    tty: true
+    command: ["bash"]
+
+# Define networks and volumes for extensibility
+networks:
+  default:
+    name: stow_net
+
+volumes:
+  config_data:
+    driver: local

@@ -50,7 +50,7 @@ DNF_EXIT_TIMEOUT=124
 
 # Print usage information
 show_help() {
-    cat << EOF
+  cat <<EOF
 Usage: $(basename "$0") [OPTION]
 
 Fedora Package Management Utility
@@ -68,7 +68,7 @@ EOF
 
 # Print section headers
 print_header() {
-    printf "${BOLD}${INVERSE}$1${NC}\n\n"
+  printf "${BOLD}${INVERSE}$1${NC}\n\n"
 }
 
 # Function to check DNF (Fedora) updates
@@ -159,8 +159,8 @@ check_status() {
   [ "$flatpak_count" = "0" ] && flatpak_count="✅"
 
   # Format the error indicators
-  [ "$fedora_count" = "!" ] && fedora_count="⏱️" # Timeout indicator
-  [ "$fedora_count" = "?" ] && fedora_count="❓" # Error indicator
+  [ "$fedora_count" = "!" ] && fedora_count="⏱️"  # Timeout indicator
+  [ "$fedora_count" = "?" ] && fedora_count="❓"   # Error indicator
   [ "$flatpak_count" = "?" ] && flatpak_count="❓" # Error indicator
 
   # If both systems are up-to-date (both original values were "0"), show only a single check mark
@@ -176,61 +176,68 @@ update_packages() {
   # Update Fedora packages
   print_header "Updating Fedora Packages"
   if sudo dnf update -y --refresh --allowerasing; then
-      printf "\n${GREEN}${BOLD}Fedora packages updated successfully.${NC}\n\n"
+    printf "\n${GREEN}${BOLD}Fedora packages updated successfully.${NC}\n\n"
   else
-      printf "\n${YELLOW}${BOLD}Fedora update encountered issues. Check the output above.${NC}\n\n"
+    printf "\n${YELLOW}${BOLD}Fedora update encountered issues. Check the output above.${NC}\n\n"
   fi
 
   # Update Flatpak applications
   print_header "Updating Flatpak Applications"
   if flatpak update -y; then
-      printf "\n${GREEN}${BOLD}Flatpak applications updated successfully.${NC}\n\n"
+    printf "\n${GREEN}${BOLD}Flatpak applications updated successfully.${NC}\n\n"
   else
-      printf "\n${YELLOW}${BOLD}Flatpak update encountered issues. Check the output above.${NC}\n\n"
+    printf "\n${YELLOW}${BOLD}Flatpak update encountered issues. Check the output above.${NC}\n\n"
   fi
 
   # Clean up DNF cache (optional but good practice)
   print_header "Cleaning DNF Cache"
   if sudo dnf clean packages --quiet; then
-      printf "${CYAN}DNF cache cleaned successfully.${NC}\n\n"
+    printf "${CYAN}DNF cache cleaned successfully.${NC}\n\n"
   fi
 
   # Remove orphaned packages (optional but good practice)
   print_header "Removing Orphaned Packages"
   if sudo dnf autoremove -y; then
-      printf "${CYAN}Orphaned packages removed successfully.${NC}\n\n"
+    printf "${CYAN}Orphaned packages removed successfully.${NC}\n\n"
   fi
 
   # Remove old Flatpak runtimes (optional but good practice)
   print_header "Cleaning Flatpak Runtimes"
   if flatpak uninstall --unused -y; then
-      printf "${CYAN}Unused Flatpak runtimes removed successfully.${NC}\n\n"
+    printf "${CYAN}Unused Flatpak runtimes removed successfully.${NC}\n\n"
   fi
 
   # Final message
   print_header "Update Process Completed"
+
+  # best-effort: tell qtile to immediately poll the widget
+  if command -v qtile >/dev/null 2>&1; then
+    qtile cmd-obj -o widget fedora-package-manager -f force_update || true
+  fi
+
 }
 
 # --- Main Script ---
 
 # Parse command line options
 case "$1" in
-  --status|"")
-    # Default action if no arguments provided
-    check_status
-    ;;
-  --update)
-    update_packages
-    ;;
-  --help|-h)
-    show_help
-    ;;
-  *)
-    echo "Invalid option: $1"
-    echo ""
-    show_help
-    exit 1
-    ;;
+--status | "")
+  # Default action if no arguments provided
+  check_status
+  ;;
+--update)
+  update_packages
+  ;;
+--help | -h)
+  show_help
+  ;;
+*)
+  echo "Invalid option: $1"
+  echo ""
+  show_help
+  exit 1
+  ;;
 esac
 
 exit 0
+

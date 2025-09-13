@@ -1,5 +1,5 @@
 bin/bash
-# Script to copy the .github folder from this repository to a list of other repositories
+# Script to copy the .github folder from this my-repos to a list of other repositories
 
 # Set source directory for .github folder
 SOURCE_DIR="$(dirname "$(realpath "$0")")/.github"
@@ -7,11 +7,11 @@ SOURCE_DIR="$(dirname "$(realpath "$0")")/.github"
 # Define list of target repositories
 # Add or remove repositories as needed
 TARGET_REPOS=(
-  "/home/developer/Documents/repository/my-unicorn"
-  "/home/developer/Documents/repository/AutoTarCompress"
-  "/home/developer/Documents/repository/fedora-setup"
-  "/home/developer/Documents/repository/BatteryGuardian"
-  "/home/developer/Documents/repository/WallpaperChanger"
+  "/home/developer/Documents/my-repos/my-unicorn"
+  "/home/developer/Documents/my-repos/AutoTarCompress"
+  "/home/developer/Documents/my-repos/fedora-setup"
+  "/home/developer/Documents/my-repos/BatteryGuardian"
+  "/home/developer/Documents/my-repos/WallpaperChanger"
 )
 
 # Colors for terminal output
@@ -35,16 +35,16 @@ GENERAL_FILES=(
   "workflows"
 )
 
-# Function to copy .github folder to a target repository
+# Function to copy .github folder to a target my-repos
 copy_github_folder() {
   local target_repo="$1"
   local target_dir="${target_repo}/.github"
 
   echo -e "${YELLOW}Processing .github for:${NC} ${target_repo}"
 
-  # Check if target repository exists
+  # Check if target my-repos exists
   if [ ! -d "$target_repo" ]; then
-    echo -e "  ${RED}Error: Target repository does not exist:${NC} ${target_repo}"
+    echo -e "  ${RED}Error: Target my-repos does not exist:${NC} ${target_repo}"
     return 1
   fi
 

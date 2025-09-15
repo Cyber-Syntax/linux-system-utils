@@ -27,6 +27,76 @@ def extract_article(html: str) -> str:
     return html
 
 
+def parse_args(argv: list[str]) -> tuple[str, Optional[str]]:
+    """
+    Parse command-line arguments for URL and optional output file.
+
+    Args:
+        argv (list[str]): List of command-line arguments.
+
+    Returns:
+        tuple[str, Optional[str]]: URL and optional output file path.
+    """
+    if len(argv) < 2:
+        print("Usage: python scrap.py <url> [output_file]", file=sys.stderr)
+        sys.exit(1)
+    url = argv[1]
+    output_file_arg = argv[2] if len(argv) > 2 else None
+    return url, output_file_arg
+
+
+def get_output_path(url: str, output_file_arg: Optional[str]) -> Path:
+    """
+    Determine the output file path based on the URL and optional output file argument.
+
+    Args:
+        url (str): The URL being scraped.
+        output_file_arg (Optional[str]): Optional output file path provided by user.
+
+    Returns:
+        Path: The resolved output file path.
+    """
+    from urllib.parse import urlparse
+
+    if output_file_arg is not None:
+        return Path(output_file_arg)
+    parsed = urlparse(url)
+    domain = parsed.netloc if parsed.netloc else "output"
+    name = url.rstrip("/").split("/")[-1] or "index"
+    output_dir = Path(domain)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir / f"{name}.md"
+
+
+def save_markdown(markdown: str, output_path: Path) -> None:
+    """
+    Save Markdown content to a file.
+
+    Args:
+        markdown (str): Markdown content.
+        output_path (Path): Path to the output file.
+    """
+    try:
+        output_path.write_text(markdown, encoding="utf-8")
+    except OSError as exc:
+        print(f"Error writing to file '{output_path}': {exc}", file=sys.stderr)
+        sys.exit(3)
+
+
+def html_to_markdown(html: str) -> str:
+    """
+    Convert only the <article> tag from HTML content to Markdown format.
+
+    Args:
+        html (str): HTML content.
+
+    Returns:
+        str: Markdown representation of the <article> tag.
+    """
+    article_html = extract_article(html)
+    return md(article_html, heading_style="ATX")
+
+
 def fetch_html(url: str) -> str:
     """
     Fetch the HTML content of a given URL.
@@ -49,60 +119,14 @@ def fetch_html(url: str) -> str:
         sys.exit(2)
 
 
-def html_to_markdown(html: str) -> str:
+def main() -> None:
     """
-    Convert only the <article> tag from HTML content to Markdown format.
-
-    Args:
-        html (str): HTML content.
-
-    Returns:
-        str: Markdown representation of the <article> tag.
+    Main function to orchestrate fetching, converting, and saving Markdown.
     """
-    article_html = extract_article(html)
-    return md(article_html, heading_style="ATX")
-
-
-def save_markdown(markdown: str, output_path: Path) -> None:
-    """
-    Save Markdown content to a file.
-
-    Args:
-        markdown (str): Markdown content.
-        output_path (Path): Path to the output file.
-    """
-    try:
-        output_path.write_text(markdown, encoding="utf-8")
-    except OSError as exc:
-        print(f"Error writing to file '{output_path}': {exc}", file=sys.stderr)
-        sys.exit(3)
-
-
-def main():
-    """
-    Main function to fetch a website, convert to Markdown, and save to file.
-    Usage: python scrap.py <url> [output_file]
-    """
-    if len(sys.argv) < 2:
-        print("Usage: python scrap.py <url> [output_file]", file=sys.stderr)
-        sys.exit(1)
-
-    url = sys.argv[1]
-    output_file_arg: Optional[str] = sys.argv[2] if len(sys.argv) > 2 else None
+    url, output_file_arg = parse_args(sys.argv)
     html = fetch_html(url)
     markdown = html_to_markdown(html)
-    from urllib.parse import urlparse
-
-    parsed = urlparse(url)
-    domain = parsed.netloc if parsed.netloc else "output"
-    if output_file_arg is None:
-        # Default: use last part of URL as filename
-        name = url.rstrip("/").split("/")[-1] or "index"
-        output_dir = Path(domain)
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / f"{name}.md"
-    else:
-        output_path = Path(output_file_arg)
+    output_path = get_output_path(url, output_file_arg)
     save_markdown(markdown, output_path)
     print(f"Saved markdown to {output_path}")
 

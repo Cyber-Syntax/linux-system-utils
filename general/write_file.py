@@ -13,8 +13,8 @@ text_to_write = b"This is a sample log entry.\n"
 for i in range(1, file_count + 1):
     file_path = os.path.join(base_dir, f"my-unicorn.log.{i}")
     with open(file_path, "wb") as f:
-        start_marker = f"---log.{i} start---\n".encode()
-        end_marker = f"---log.{i} end---\n".encode()
+        start_marker = f"======log.{i} start=====\n".encode()
+        end_marker = f"=====log.{i} end=====\n".encode()
         f.write(start_marker)
 
         # Fill file until reaching size limit - reserve for end marker

@@ -1,4 +1,5 @@
 # #!/bin/bash
+# .local/bin/rsync -> /home/developer/.local/share/linux-system-utils/backup/rsync.sh
 
 # sudo rsync -avz --progress \
 #   --exclude-from "rsync-exclude.txt" \

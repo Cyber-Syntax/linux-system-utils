@@ -7,7 +7,7 @@ set -o nounset
 set -o pipefail
 
 SOURCE_DIR="${HOME}/Documents"
-BACKUP_DIR="/mnt/backups/rsync"
+BACKUP_DIR="/mnt/sda2/rsync_home_backup"
 DATETIME="$(date '+%d-%m-%Y_%H')"
 BACKUP_PATH="${BACKUP_DIR}/${DATETIME}"
 LATEST_LINK="${BACKUP_DIR}/latest"

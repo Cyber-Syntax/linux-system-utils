@@ -6,31 +6,36 @@ labels: bug
 assignees: ""
 ---
 
-**Versions**
+## Version
 
-- my-unicorn version: <!-- e.g: 0.10.10-alpha -->
-- Python version: <!-- [e.g 3.12] -->
+- App version: <!-- e.g: 0.10.10-alpha -->
+- Script language(bash, python) version: <!-- [e.g 3.12] -->
 
-**Describe the bug**
+## Describe the bug
+
 <!-- A clear and concise description of what the bug is. -->
 
-**Console Output**
+## Console Output
+
 <!-- Place to output in the below in the quotes -->
 
 ```
 
 ```
 
-**Expected behavior**
+## Expected behavior
+
 <!-- A clear and concise description of what you expected to happen. -->
 
-**LOG**
-> Paste the log(`/home/<your_username>/.local/state/my-unicorn/my-unicorn.log`) here:
+## LOG
+
+> Paste the log(`/home/<your_username>/.local/state/auto-penguin-setup/auto-penguin-setup.log`) here:
 
 ```
 
 
 ```
 
-**Additional context**
+## Additional context
+
 <!-- Add any other context about the problem here. -->

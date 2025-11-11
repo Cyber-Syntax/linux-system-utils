@@ -155,8 +155,8 @@ check_status() {
   original_flatpak="$flatpak_count"
 
   # Show checkmark instead of "0" for better readability
-  [ "$fedora_count" = "0" ] && fedora_count="✅"
-  [ "$flatpak_count" = "0" ] && flatpak_count="✅"
+  [ "$fedora_count" = "0" ] && fedora_count="✓ "
+  [ "$flatpak_count" = "0" ] && flatpak_count="✓ "
 
   # Format the error indicators
   [ "$fedora_count" = "!" ] && fedora_count="⏱️"  # Timeout indicator
@@ -165,9 +165,9 @@ check_status() {
 
   # If both systems are up-to-date (both original values were "0"), show only a single check mark
   if [ "$original_fedora" = "0" ] && [ "$original_flatpak" = "0" ]; then
-    echo "✅ Up-to-date"
+    echo "✓ Up-to-date"
   else
-    echo "$FEDORA_ICON : $fedora_count | 📦: $flatpak_count"
+    echo "$FEDORA_ICON : $fedora_count | flatpak: $flatpak_count"
   fi
 }
 
@@ -240,4 +240,3 @@ case "$1" in
 esac
 
 exit 0
-

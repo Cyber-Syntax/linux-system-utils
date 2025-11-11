@@ -13,14 +13,12 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Default locations based on XDG Base Directory Specification
-XDG_BIN_HOME="${XDG_BIN_HOME:-$HOME/.local/bin}"
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 
 # Repo and installation directories
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_DIR="${XDG_DATA_HOME}/linux-system-utils"
-BIN_DIR="${XDG_BIN_HOME}"
 CONFIG_DIR="${XDG_CONFIG_HOME}/linux-system-utils"
 
 # Define script categories and their installation paths
@@ -42,6 +40,8 @@ print_usage() {
   echo "  -f, --force       Force installation (overwrite existing files)"
   echo "  -v, --verbose     Verbose output"
   echo "  -t, --target DIR  Specify custom installation directory"
+  echo
+  echo "Installation directory: $INSTALL_DIR"
   echo
   echo "Example:"
   echo "  $0 --dev          # Install from current directory"
@@ -70,7 +70,7 @@ log_error() {
 
 # Check if a command exists
 command_exists() {
-  command -v "$1" &> /dev/null
+  command -v "$1" &>/dev/null
 }
 
 # Create directory if it doesn't exist
@@ -100,40 +100,16 @@ copy_script() {
   log_info "Installed: $dest"
 }
 
-# Create symbolic links in bin directory
-create_symlinks() {
-  ensure_dir_exists "$BIN_DIR"
-
-  # Find all executable scripts
-  find "$INSTALL_DIR" -type f -name "*.sh" | while read script; do
-    local script_name="$(basename "$script" .sh)"
-    local link_path="$BIN_DIR/$script_name"
-
-    # Skip if link exists and not forcing
-    if [[ -L "$link_path" && "$FORCE" != "true" ]]; then
-      log_warn "Symlink already exists: $link_path (use --force to overwrite)"
-      continue
-    fi
-
-    # Remove existing symlink or file if it exists
-    if [[ -e "$link_path" ]]; then
-      rm "$link_path"
-    fi
-
-    ln -sf "$script" "$link_path"
-    log_info "Created symlink: $link_path -> $script"
-  done
-}
-
 # Install from current directory (development mode)
 install_from_dev() {
-  log_info "Installing from development directory..."
+  log_info "Installing from development directory (copy mode)..."
 
   # Create installation directories
   ensure_dir_exists "$INSTALL_DIR"
   ensure_dir_exists "$CONFIG_DIR"
 
-  # Install scripts by category
+  # In dev mode, we copy files from the current branch to INSTALL_DIR
+  # This avoids git branch complications and allows testing without symlink issues
   for dir in "${!SCRIPT_DIRS[@]}"; do
     local source_dir="${REPO_DIR}/${dir}"
     local target_dir="${SCRIPT_DIRS[$dir]}"
@@ -141,7 +117,7 @@ install_from_dev() {
     if [[ -d "$source_dir" ]]; then
       ensure_dir_exists "$target_dir"
 
-      # Find all shell scripts in this category
+      # Find all shell scripts in this category and copy them
       find "$source_dir" -type f -name "*.sh" | while read script; do
         local script_name="$(basename "$script")"
         copy_script "$script" "${target_dir}/${script_name}"
@@ -151,12 +127,11 @@ install_from_dev() {
     fi
   done
 
-  # Create symlinks for easy access
-  create_symlinks
-
   log_success "Development installation complete!"
-  log_info "Scripts installed to: $INSTALL_DIR"
-  log_info "Symlinks created in: $BIN_DIR"
+  log_info "Scripts copied to: $INSTALL_DIR"
+  log_info "Scripts copied from current branch: $(cd "$REPO_DIR" && git branch --show-current 2>/dev/null || echo 'unknown')"
+  log_info "Run scripts from: $INSTALL_DIR/<category>/<script>.sh"
+  log_info "Note: Re-run deploy to update scripts after making changes"
 }
 
 # Install from main branch by cloning directly to the installation directory
@@ -263,57 +238,54 @@ install_from_main() {
     rm -rf "$temp_dir"
   fi
 
-  # Create symlinks for easy access
-  create_symlinks
-
   log_success "Main branch installation complete!"
   log_info "Scripts installed to: $INSTALL_DIR"
-  log_info "Symlinks created in: $BIN_DIR"
+  log_info "Run scripts from: $INSTALL_DIR/<category>/<script>.sh"
 }
 
 # Parse command-line arguments
-MODE="main"  # Default mode is main branch
+MODE="main" # Default mode is main branch
 FORCE="false"
 VERBOSE="false"
 CUSTOM_INSTALL_DIR=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -h|--help)
-      print_usage
-      exit 0
-      ;;
-    -d|--dev)
-      MODE="dev"
-      shift
-      ;;
-    -m|--main)
-      MODE="main"
-      shift
-      ;;
-    -f|--force)
-      FORCE="true"
-      shift
-      ;;
-    -v|--verbose)
-      VERBOSE="true"
-      shift
-      ;;
-    -t|--target)
-      if [[ -n "$2" ]]; then
-        CUSTOM_INSTALL_DIR="$2"
-        INSTALL_DIR="$CUSTOM_INSTALL_DIR"
-        shift 2
-      else
-        log_error "Option --target requires a directory argument."
-        exit 1
-      fi
-      ;;
-    *)
-      log_error "Unknown option: $1"
-      print_usage
+  -h | --help)
+    print_usage
+    exit 0
+    ;;
+  -d | --dev)
+    MODE="dev"
+    shift
+    ;;
+  -m | --main)
+    MODE="main"
+    shift
+    ;;
+  -f | --force)
+    FORCE="true"
+    shift
+    ;;
+  -v | --verbose)
+    VERBOSE="true"
+    shift
+    ;;
+  -t | --target)
+    if [[ -n "$2" ]]; then
+      CUSTOM_INSTALL_DIR="$2"
+      INSTALL_DIR="$CUSTOM_INSTALL_DIR"
+      shift 2
+    else
+      log_error "Option --target requires a directory argument."
       exit 1
-      ;;
+    fi
+    ;;
+  *)
+    log_error "Unknown option: $1"
+    print_usage
+    exit 1
+    ;;
   esac
 done
 

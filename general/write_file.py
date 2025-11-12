@@ -7,7 +7,7 @@ base_dir = os.path.expanduser("~/.config/my-unicorn/logs")
 os.makedirs(base_dir, exist_ok=True)
 
 file_count = 3
-file_size_limit = 1024 * 1024  # 1 MB
+file_size_limit = 1024 * 1024 * 10  # 10 MB
 text_to_write = b"This is a sample log entry.\n"
 
 for i in range(1, file_count + 1):

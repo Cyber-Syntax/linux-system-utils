@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 export DISPLAY=":0"
-monitor_center="DP-2"
+monitor_center="HDMI-0"
 rate=143.97
 
 # Ensure the monitor is connected before proceeding

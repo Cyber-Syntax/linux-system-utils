@@ -82,4 +82,3 @@ fi
 
 # Output JSON formatted for waybar
 printf '{"text": "%s", "tooltip": "%s", "class": "%s"}\n' "$output" "$tooltip" "$overall_class"
-

@@ -1,0 +1,77 @@
+FROM docker.io/library/debian:latest
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update and install development dependencies
+RUN apt-get update && \
+    apt-get install -y \
+    # Basic utilities
+    git \
+    vim \
+    curl \
+    wget \
+    bash-completion \
+    findutils \
+    procps \
+    # Required for script
+    jq \
+    # Development tools
+    shellcheck \
+    bats \
+    # Sudo for privilege escalation
+    sudo \
+    # Additional utilities
+    software-properties-common \
+    gnupg \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install shfmt manually (not in debian repos)
+RUN curl -L https://github.com/mvdan/sh/releases/download/v3.8.0/shfmt_v3.8.0_linux_amd64 -o /usr/local/bin/shfmt && \
+    chmod +x /usr/local/bin/shfmt
+
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+# Pre-create system directories that the script needs
+RUN mkdir -p \
+    /etc/systemd/system \
+    /etc/tlp.d \
+    /etc/modprobe.d \
+    /etc/X11/xorg.conf.d \
+    /etc/sysctl.d \
+    /etc/udev/rules.d \
+    /etc/ssh/sshd_config.d \
+    /etc/sddm.conf.d \
+    /etc/gdm \
+    /etc/lightdm \
+    /etc/sudoers.d \
+    /opt/borg \
+    /usr/share/applications \
+    /usr/share/keyrings \
+    /etc/libvirt
+
+# Create user with matching UID/GID and sudo privileges
+RUN groupadd -g ${USER_GID} devuser && \
+    useradd -m -u ${USER_UID} -g ${USER_GID} -G sudo devuser && \
+    echo "devuser:test123" | chpasswd && \
+    echo "devuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/devuser && \
+    chmod 0440 /etc/sudoers.d/devuser
+
+# Create .config directory with proper permissions
+RUN mkdir -p /home/devuser/.config && \
+    chown -R devuser:devuser /home/devuser
+
+# Copy source code to home directory (owned by devuser)
+# This solves permission issues and makes relative paths work
+COPY --chown=devuser:devuser . /home/devuser/auto-penguin-setup/
+
+# Set working directory to the project
+WORKDIR /home/devuser/auto-penguin-setup
+
+# Switch to non-root user
+USER devuser
+
+# Keep container running
+CMD ["sleep", "infinity"]

@@ -165,7 +165,7 @@ check_status() {
 
   # If both systems are up-to-date (both original values were "0"), show only a single check mark
   if [ "$original_fedora" = "0" ] && [ "$original_flatpak" = "0" ]; then
-    echo "✓ Up-to-date"
+    echo "Up-to-date"
   else
     echo "$FEDORA_ICON : $fedora_count | flatpak: $flatpak_count"
   fi

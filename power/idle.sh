@@ -140,60 +140,87 @@ is_audio_playing() {
   fi
 
   # Layer 2: Check PulseAudio/PipeWire sink-inputs (SECOND PRIORITY)
-  # This catches non-MPRIS audio like system sounds
-  # Important: Check for corked state to avoid false positives from paused streams
+  # This catches non-MPRIS audio like system sounds and WebRTC/Zoom browser streams.
+  # Important: Evaluate each sink-input block even if 'pulse.corked' is missing.
   if command -v pactl >/dev/null 2>&1; then
     local pactl_output
     pactl_output=$(pactl list sink-inputs 2>/dev/null || true)
 
     if [ -n "$pactl_output" ]; then
-      # Check if there are any sink-inputs that are NOT corked (not paused)
-      # We need to parse each sink-input block separately
       local in_sink_input=0
       local current_corked=""
       local current_state=""
+      local current_app=""
       local found_active=0
 
-      while IFS= read -r line; do
+      # Helper to evaluate the current block
+      evaluate_block() {
+        # If we have a RUNNING state, decide based on corked and heuristics
+        if [ "$current_state" = "RUNNING" ]; then
+          if [ "$current_corked" != "true" ]; then
+            _debug "audio active: pactl sink-input RUNNING (corked='$current_corked') app='$current_app'"
+            found_active=1
+            return 0
+          else
+            _debug "pactl: sink-input RUNNING but corked='true' (paused) app='$current_app', ignoring"
+            return 1
+          fi
+        fi
+        return 1
+      }
+
+      # Parse output line-by-line; evaluate when a new sink-input starts or at end
+      while IFS= read -r line || [ -n "$line" ]; do
         if echo "$line" | grep -q "^Sink Input #"; then
-          # New sink-input block - reset state
+          # If we were parsing a previous block, evaluate it
+          if [ $in_sink_input -eq 1 ]; then
+            evaluate_block
+            [ $found_active -eq 1 ] && break
+          fi
+          # Start new block
           in_sink_input=1
           current_corked=""
           current_state=""
+          current_app=""
         elif [ $in_sink_input -eq 1 ]; then
-          # Check for State
+          # Capture State
           if echo "$line" | grep -q 'State: RUNNING'; then
             current_state="RUNNING"
+          elif echo "$line" | grep -q 'State:'; then
+            # other states like SUSPENDED/IDLE - store verbatim for debug if needed
+            current_state="$(echo "$line" | sed -n 's/.*State: *\([^ ]*\).*/\1/p')"
           fi
 
-          # Check for corked property (true = paused, false or absent = playing)
+          # Capture corked property if present
           if echo "$line" | grep -q 'pulse.corked = "true"'; then
             current_corked="true"
           elif echo "$line" | grep -q 'pulse.corked = "false"'; then
             current_corked="false"
           fi
 
-          # If we have both state and corked info, evaluate
-          if [ -n "$current_state" ] && [ -n "$current_corked" ]; then
-            if [ "$current_state" = "RUNNING" ] && [ "$current_corked" != "true" ]; then
-              _debug "audio active: pactl sink-input RUNNING and not corked (non-MPRIS audio)"
-              found_active=1
-              break
-            elif [ "$current_state" = "RUNNING" ] && [ "$current_corked" = "true" ]; then
-              _debug "pactl: found RUNNING sink-input but it's corked (paused), ignoring"
-            fi
-            # Reset for next sink-input
-            current_state=""
-            current_corked=""
+          # Capture application/process identity or media name for heuristics/logging
+          if echo "$line" | grep -q 'application.process.binary'; then
+            current_app="$(echo "$line" | sed -n 's/.*= *\"\\?\([^\"\r\n]*\\\?\"\\?\).*/\1/p' | tr -d '\"')"
+          elif echo "$line" | grep -q 'application.name'; then
+            # application.name = "Firefox"
+            current_app="$(echo "$line" | sed -n 's/.*= *\"\\?\([^\"\r\n]*\\\?\"\\?\).*/\1/p' | tr -d '\"')"
+          elif echo "$line" | grep -q 'media.name\|Media Name'; then
+            current_app="$(echo "$line" | sed -n 's/.*= *\"\\?\([^\"\r\n]*\\\?\"\\?\).*/\1/p' | tr -d '\"')"
           fi
         fi
       done <<<"$pactl_output"
 
+      # Evaluate the last block if we didn't already
+      if [ $found_active -eq 0 ] && [ $in_sink_input -eq 1 ]; then
+        evaluate_block
+      fi
+
       [ $found_active -eq 1 ] && return 0
     fi
-    _debug "pactl: no active (non-corked) sink-inputs"
 
-    # If pactl is available, we skip ALSA check to avoid PipeWire false positives
+    _debug "pactl: no active (non-corked) sink-inputs found"
+
+    # If pactl is available, skip ALSA check to avoid PipeWire false positives
     _debug "ALSA: skipping (using PulseAudio/PipeWire layer instead)"
   else
     _debug "pactl: command not available"

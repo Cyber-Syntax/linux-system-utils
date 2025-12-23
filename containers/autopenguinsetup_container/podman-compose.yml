@@ -1,0 +1,74 @@
+version: "3.8"
+
+services:
+  # Fedora development container
+  fedora:
+    build:
+      context: ..
+      dockerfile: container/Dockerfile.fedora
+      args:
+        USER_UID: ${USER_UID:-1000}
+        USER_GID: ${USER_GID:-1000}
+    container_name: auto-penguin-fedora
+    hostname: fedora-dev
+    restart: unless-stopped
+    volumes:
+      # Persistent .config directory (isolated from host)
+      - fedora-config:/home/devuser/.config
+    working_dir: /home/devuser/auto-penguin-setup
+    environment:
+      - DISTRO=fedora
+      - XDG_CONFIG_HOME=/home/devuser/.config
+    tty: true
+    stdin_open: true
+
+  # Arch Linux development container
+  arch:
+    build:
+      context: ..
+      dockerfile: container/Dockerfile.arch
+      args:
+        USER_UID: ${USER_UID:-1000}
+        USER_GID: ${USER_GID:-1000}
+    container_name: auto-penguin-arch
+    hostname: arch-dev
+    restart: unless-stopped
+    volumes:
+      # Persistent .config directory (isolated from host)
+      - arch-config:/home/devuser/.config
+    working_dir: /home/devuser/auto-penguin-setup
+    environment:
+      - DISTRO=arch
+      - XDG_CONFIG_HOME=/home/devuser/.config
+    tty: true
+    stdin_open: true
+
+  # Debian development container
+  debian:
+    build:
+      context: ..
+      dockerfile: container/Dockerfile.debian
+      args:
+        USER_UID: ${USER_UID:-1000}
+        USER_GID: ${USER_GID:-1000}
+    container_name: auto-penguin-debian
+    hostname: debian-dev
+    restart: unless-stopped
+    volumes:
+      # Persistent .config directory (isolated from host)
+      - debian-config:/home/devuser/.config
+    working_dir: /home/devuser/auto-penguin-setup
+    environment:
+      - DISTRO=debian
+      - XDG_CONFIG_HOME=/home/devuser/.config
+    tty: true
+    stdin_open: true
+
+# Named volumes for persistent .config directories (isolated per distro)
+volumes:
+  fedora-config:
+    driver: local
+  arch-config:
+    driver: local
+  debian-config:
+    driver: local

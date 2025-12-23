@@ -9,3 +9,4 @@ lost+found
 /swapfile
 /backup-for-cloud/
 /Downloads/
+/tmp/

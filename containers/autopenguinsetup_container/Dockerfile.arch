@@ -1,0 +1,71 @@
+FROM docker.io/library/archlinux:latest
+
+# Update and install development dependencies
+RUN pacman -Syu --noconfirm && \
+    pacman -S --noconfirm \
+    # Basic utilities
+    git \
+    vim \
+    wget \
+    bash-completion \
+    # Required for script
+    jq \
+    # Development tools
+    shellcheck \
+    shfmt \
+    bats \
+    # Sudo for privilege escalation
+    sudo \
+    # AUR helper (paru) dependencies
+    base-devel \
+    && pacman -Scc --noconfirm
+
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+# Pre-create system directories that the script needs
+RUN mkdir -p \
+    /etc/systemd/system \
+    /etc/tlp.d \
+    /etc/modprobe.d \
+    /etc/X11/xorg.conf.d \
+    /etc/sysctl.d \
+    /etc/udev/rules.d \
+    /etc/ssh/sshd_config.d \
+    /etc/sddm.conf.d \
+    /etc/gdm \
+    /etc/lightdm \
+    /etc/sudoers.d \
+    /opt/borg \
+    /usr/share/applications \
+    /usr/share/keyrings \
+    /etc/libvirt
+
+# Create user with matching UID/GID
+RUN groupadd -g ${USER_GID} devuser && \
+    useradd -m -u ${USER_UID} -g ${USER_GID} -G wheel devuser && \
+    echo "devuser:test123" | chpasswd && \
+    echo "devuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/devuser && \
+    chmod 0440 /etc/sudoers.d/devuser
+
+# Install paru (AUR helper) as devuser
+USER devuser
+WORKDIR /tmp
+RUN git clone https://aur.archlinux.org/paru.git && \
+    cd paru && \
+    makepkg -si --noconfirm && \
+    cd .. && \
+    rm -rf paru
+
+# Create .config directory with proper permissions
+RUN mkdir -p /home/devuser/.config
+
+# Copy source code to home directory (owned by devuser)
+# This solves permission issues and makes relative paths work
+COPY --chown=devuser:devuser . /home/devuser/auto-penguin-setup/
+
+# Set working directory to the project
+WORKDIR /home/devuser/auto-penguin-setup
+
+# Keep container running
+CMD ["sleep", "infinity"]

@@ -33,7 +33,7 @@ print_sink() {
         echo "DP-2"
     elif [ "$running_sink" = "$DP_0" ]; then
         echo "DP-0"
-    elif [ "$running_sink" = "$DP_4"]; then
+    elif [ "$running_sink" = "$DP_4" ]; then
         echo "DP-4"
     fi
 }
@@ -41,39 +41,39 @@ print_sink() {
 # Function to change sink
 change_sink() {
     if [ "$running_sink" = "$headset" ]; then
-        if [[ $available_sinks == *"$DP_1"* ]]; then
+        if [[ -v available_sinks[$DP_1] ]]; then
             pactl set-default-sink $DP_1
             echo "DP-1"
-        elif [[ $available_sinks == *"$DP_2"* ]]; then
+        elif [[ -v available_sinks[$DP_2] ]]; then
             pactl set-default-sink $DP_2
             echo "DP-2"
-        elif [[ $available_sinks == *"$DP_0"* ]]; then
+        elif [[ -v available_sinks[$DP_0] ]]; then
             pactl set-default-sink $DP_0
             echo "DP-0"
         else
             echo "Cannot find DP-1, DP-2 or DP-0. Exiting."
         fi
     elif [ "$running_sink" = "$DP_1" ]; then
-        if [[ $available_sinks == *"$headset"* ]]; then
+        if [[ -v available_sinks[$headset] ]]; then
             pactl set-default-sink $headset
             echo "Headset"
-        elif [[ $available_sinks == *"$DP_2"* ]]; then
+        elif [[ -v available_sinks[$DP_2] ]]; then
             pactl set-default-sink $DP_2
             echo "DP-2"
-        elif [[ $available_sinks == *"$DP_0"* ]]; then
+        elif [[ -v available_sinks[$DP_0] ]]; then
             pactl set-default-sink $DP_0
             echo "DP-0"
         else
             echo "Cannot find headset, DP-2 or DP-0. Exiting."
         fi
     elif [ "$running_sink" = "$DP_2" ]; then
-        if [[ $available_sinks == *"$headset"* ]]; then
+        if [[ -v available_sinks[$headset] ]]; then
             pactl set-default-sink $headset
             echo "Headset"
-        elif [[ $available_sinks == *"$DP_1"* ]]; then
+        elif [[ -v available_sinks[$DP_1] ]]; then
             pactl set-default-sink $DP_1
             echo "DP-1"
-        elif [[ $available_sinks == *"$DP_0"* ]]; then
+        elif [[ -v available_sinks[$DP_0] ]]; then
             pactl set-default-sink $DP_0
             echo "DP-0"
         else
@@ -101,13 +101,13 @@ volume_level() {
     else
         # Print default sink name
         if [ "$running_sink" = "1" ]; then
-            echo "Headset": $level                    
+            echo "Headset": "$level"                    
         elif [ "$running_sink" = "2" ]; then
-            echo "DP-1": $level
+            echo "DP-1": "$level"
         elif [ "$running_sink" = "3" ]; then
-            echo "DP-2": $level
+            echo "DP-2": "$level"
         elif [ "$running_sink" = "4" ]; then
-            echo "DP-0": $level
+            echo "DP-0": "$level"
         fi
 
         # Print the volume level

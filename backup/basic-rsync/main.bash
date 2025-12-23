@@ -18,7 +18,7 @@ rm -rf "${LATEST_LINK}"
 ln -s "${BACKUP_PATH}" "${LATEST_LINK}"
 
 rsync -av --delete --progress \
-  "${SOURCE_DIR}/" \
+  "${SOURCE_DIR}" \
   --link-dest "${LATEST_LINK}" \
   --exclude-from "exclude_files.txt" \
   --log-file "${BACKUP_PATH}.log" \

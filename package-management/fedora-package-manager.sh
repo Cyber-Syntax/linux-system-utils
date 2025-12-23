@@ -62,16 +62,30 @@ print_header() {
   echo "$1"
 }
 
+# Check for available package managers
+check_dependencies() {
+  HAS_DNF=0
+  command -v dnf >/dev/null 2>&1 && HAS_DNF=1
+  HAS_FLATPAK=0
+  command -v flatpak >/dev/null 2>&1 && HAS_FLATPAK=1
+}
+
 # Function to check DNF (Fedora) updates
 # Returns:
 #   "0": No updates
 #   <number>: Number of updates
 #   "!": Timeout
 #   "?": Error
+#   "N/A": DNF not available
 get_dnf_update_count() {
   local dnf_output
   local dnf_exit_status
   local count
+
+  if [ "$HAS_DNF" -ne 1 ]; then
+    echo "N/A"
+    return
+  fi
 
   # Use timeout command to kill after 15 seconds if stuck
   # -y to automatically answer yes to any prompts like GPG key imports
@@ -96,10 +110,16 @@ get_dnf_update_count() {
 #   "0": No updates
 #   <number>: Number of updates
 #   "?": Error
+#   "N/A": Flatpak not available
 get_flatpak_update_count() {
   local flatpak_output
   local flatpak_exit_status
   local count
+
+  if [ "$HAS_FLATPAK" -ne 1 ]; then
+    echo "N/A"
+    return
+  fi
 
   # First try with remote-ls --updates which is more reliable
   flatpak_output=$(flatpak remote-ls --updates 2>/dev/null)
@@ -132,6 +152,73 @@ get_flatpak_update_count() {
   echo "$count"
 }
 
+# Function to update DNF packages and perform related cleanup
+update_dnf() {
+  if [ "$HAS_DNF" -ne 1 ]; then
+    echo "DNF not available, skipping Fedora updates."
+    return 0
+  fi
+
+  # Update Fedora packages
+  print_header "Updating Fedora Packages"
+  if sudo dnf update -y --refresh --allowerasing; then
+    echo "Fedora packages updated successfully."
+    echo
+  else
+    echo "Fedora update encountered issues. Check the output above."
+    echo
+  fi
+
+  # Clean up DNF cache (optional but good practice)
+  print_header "Cleaning DNF Cache"
+  if sudo dnf clean packages --quiet; then
+    echo "DNF cache cleaned successfully."
+    echo
+  fi
+
+  # Remove orphaned packages (optional but good practice)
+  print_header "Removing Orphaned Packages"
+  if sudo dnf autoremove -y; then
+    echo "Orphaned packages removed successfully."
+    echo
+  fi
+}
+
+# Function to update Flatpak applications and perform related cleanup
+update_flatpak() {
+  if [ "$HAS_FLATPAK" -ne 1 ]; then
+    echo "Flatpak not available, skipping Flatpak updates."
+    return 0
+  fi
+
+  # Update Flatpak applications
+  print_header "Updating Flatpak Applications"
+  if flatpak update -y; then
+    echo "Flatpak applications updated successfully."
+    echo
+  else
+    echo "Flatpak update encountered issues. Check the output above."
+    echo
+  fi
+
+  # Remove old Flatpak runtimes (optional but good practice)
+  print_header "Cleaning Flatpak Runtimes"
+  if flatpak uninstall --unused -y; then
+    echo "Unused Flatpak runtimes removed successfully."
+    echo
+  fi
+}
+
+# Function to update the qtile widget if qtile is available
+update_qtile_widget() {
+  # best-effort: tell qtile to immediately poll the widget
+  if command -v qtile >/dev/null 2>&1; then
+    if ! qtile cmd-obj -o widget fedora-package-manager -f force_update; then
+      echo "Note: Failed to update qtile widget. This is optional and does not affect the update."
+    fi
+  fi
+}
+
 # Function to check status of updates
 check_status() {
   # ------------- DNF (Fedora) Update Info -------------
@@ -150,9 +237,11 @@ check_status() {
   [ "$flatpak_count" = "0" ] && flatpak_count="✓ "
 
   # Format the error indicators
-  [ "$fedora_count" = "!" ] && fedora_count="TIMEOUT"  # Timeout indicator
-  [ "$fedora_count" = "?" ] && fedora_count="ERROR"   # Error indicator
-  [ "$flatpak_count" = "?" ] && flatpak_count="ERROR" # Error indicator
+  [ "$fedora_count" = "!" ] && fedora_count="TIMEOUT"           # Timeout indicator
+  [ "$fedora_count" = "?" ] && fedora_count="ERROR"             # Error indicator
+  [ "$flatpak_count" = "?" ] && flatpak_count="ERROR"           # Error indicator
+  [ "$fedora_count" = "N/A" ] && fedora_count="Not Available"   # Not available
+  [ "$flatpak_count" = "N/A" ] && flatpak_count="Not Available" # Not available
 
   # If both systems are up-to-date (both original values were "0"), show only a single check mark
   if [ "$original_fedora" = "0" ] && [ "$original_flatpak" = "0" ]; then
@@ -164,79 +253,44 @@ check_status() {
 
 # Function to update all packages
 update_packages() {
-  # Update Fedora packages
-  print_header "Updating Fedora Packages"
-  if sudo dnf update -y --refresh --allowerasing; then
-    echo "Fedora packages updated successfully."
-    echo
-  else
-    echo "Fedora update encountered issues. Check the output above."
-    echo
-  fi
-
-  # Update Flatpak applications
-  print_header "Updating Flatpak Applications"
-  if flatpak update -y; then
-    echo "Flatpak applications updated successfully."
-    echo
-  else
-    echo "Flatpak update encountered issues. Check the output above."
-    echo
-  fi
-
-  # Clean up DNF cache (optional but good practice)
-  print_header "Cleaning DNF Cache"
-  if sudo dnf clean packages --quiet; then
-    echo "DNF cache cleaned successfully."
-    echo
-  fi
-
-  # Remove orphaned packages (optional but good practice)
-  print_header "Removing Orphaned Packages"
-  if sudo dnf autoremove -y; then
-    echo "Orphaned packages removed successfully."
-    echo
-  fi
-
-  # Remove old Flatpak runtimes (optional but good practice)
-  print_header "Cleaning Flatpak Runtimes"
-  if flatpak uninstall --unused -y; then
-    echo "Unused Flatpak runtimes removed successfully."
-    echo
-  fi
+  update_dnf
+  update_flatpak
 
   # Final message
   print_header "Update Process Completed"
 
-  # best-effort: tell qtile to immediately poll the widget
-  if command -v qtile >/dev/null 2>&1; then
-    if ! qtile cmd-obj -o widget fedora-package-manager -f force_update; then
-      echo "Note: Failed to update qtile widget. This is optional and does not affect the update."
-    fi
-  fi
-
+  # Update qtile widget if applicable
+  update_qtile_widget
 }
 
 # --- Main Script ---
 
+# Handle help first
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  show_help
+  exit 0
+fi
+
+# Check dependencies
+check_dependencies
+
 # Parse command line options
 case "$1" in
---status | "")
-  # Default action if no arguments provided
-  check_status
-  ;;
---update)
-  update_packages
-  ;;
---help | -h)
-  show_help
-  ;;
-*)
-  echo "Invalid option: $1"
-  echo ""
-  show_help
-  exit 1
-  ;;
+  --status)
+    check_status
+    ;;
+  --update)
+    update_packages
+    ;;
+  --help | -h | "")
+    show_help
+    ;;
+  *)
+    echo "Invalid option: $1"
+    echo ""
+    show_help
+    exit 1
+    ;;
 esac
 
 exit 0

@@ -23,7 +23,15 @@ CONFIG_DIR="${XDG_CONFIG_HOME}/linux-system-utils"
 
 # Define script categories and their installation paths
 declare -A SCRIPT_DIRS
-SCRIPT_DIRS["system/info"]="${INSTALL_DIR}/system/info"
+SCRIPT_DIRS["system"]="${INSTALL_DIR}/system"
+SCRIPT_DIRS["github"]="${INSTALL_DIR}/github"
+SCRIPT_DIRS["hardware"]="${INSTALL_DIR}/hardware"
+SCRIPT_DIRS["games"]="${INSTALL_DIR}/games"
+SCRIPT_DIRS["audio"]="${INSTALL_DIR}/audio"
+SCRIPT_DIRS["display"]="${INSTALL_DIR}/display"
+SCRIPT_DIRS["automation"]="${INSTALL_DIR}/automation"
+SCRIPT_DIRS["general"]="${INSTALL_DIR}/general"
+SCRIPT_DIRS["network"]="${INSTALL_DIR}/network"
 SCRIPT_DIRS["package-management"]="${INSTALL_DIR}/package-management"
 SCRIPT_DIRS["power"]="${INSTALL_DIR}/power"
 
@@ -35,16 +43,15 @@ print_usage() {
   echo
   echo "Options:"
   echo "  -h, --help        Show this help message"
-  echo "  -d, --dev         Install from current directory (development mode)"
-  echo "  -m, --main        Install from main branch (default)"
+  echo "  -m, --main        Install from main branch"
   echo "  -f, --force       Force installation (overwrite existing files)"
   echo "  -v, --verbose     Verbose output"
   echo "  -t, --target DIR  Specify custom installation directory"
   echo
   echo "Installation directory: $INSTALL_DIR"
   echo
-  echo "Example:"
-  echo "  $0 --dev          # Install from current directory"
+  echo "Examples:"
+  echo "  $0                # Install from current directory (default)"
   echo "  $0 --main         # Install from main branch"
   echo "  $0 --target ~/scripts # Install to custom directory"
 }
@@ -100,38 +107,48 @@ copy_script() {
   log_info "Installed: $dest"
 }
 
-# Install from current directory (development mode)
-install_from_dev() {
-  log_info "Installing from development directory (copy mode)..."
+# Install from current directory
+install_from_current() {
+  log_info "Installing from current directory..."
 
   # Create installation directories
   ensure_dir_exists "$INSTALL_DIR"
   ensure_dir_exists "$CONFIG_DIR"
 
-  # In dev mode, we copy files from the current branch to INSTALL_DIR
-  # This avoids git branch complications and allows testing without symlink issues
+  # Get current branch for logging
+  local current_branch="$(cd "$REPO_DIR" && git branch --show-current 2>/dev/null || echo 'unknown')"
+  log_info "Installing from branch: $current_branch"
+
+  # Copy entire folders from the current directory to INSTALL_DIR
   for dir in "${!SCRIPT_DIRS[@]}"; do
     local source_dir="${REPO_DIR}/${dir}"
     local target_dir="${SCRIPT_DIRS[$dir]}"
 
     if [[ -d "$source_dir" ]]; then
       ensure_dir_exists "$target_dir"
+      # Copy all contents including hidden files
+      shopt -s dotglob
+      cp -r "$source_dir"/* "$target_dir"/ 2>/dev/null || true
+      log_info "Copied folder: $source_dir -> $target_dir"
 
-      # Find all shell scripts in this category and copy them
-      find "$source_dir" -type f -name "*.sh" | while read script; do
-        local script_name="$(basename "$script")"
-        copy_script "$script" "${target_dir}/${script_name}"
+      # Log each copied file
+      find "$target_dir" -type f 2>/dev/null | while read -r file; do
+        local rel_path="${file#"$target_dir"/}"
+        log_info "  File: $rel_path -> $file"
       done
     else
       log_warn "Directory not found: $source_dir"
     fi
   done
 
-  log_success "Development installation complete!"
-  log_info "Scripts copied to: $INSTALL_DIR"
-  log_info "Scripts copied from current branch: $(cd "$REPO_DIR" && git branch --show-current 2>/dev/null || echo 'unknown')"
-  log_info "Run scripts from: $INSTALL_DIR/<category>/<script>.sh"
-  log_info "Note: Re-run deploy to update scripts after making changes"
+  # Ensure all scripts are executable
+  find "$INSTALL_DIR" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.js" \) -exec chmod +x {} \;
+
+  log_success "Installation from current directory complete!"
+  log_info "Files installed to: $INSTALL_DIR"
+  log_info "Branch used: $current_branch"
+  log_info "Run scripts from: $INSTALL_DIR/<folder>/<subpath>/<script>"
+  log_info "Note: Re-run deploy to update after making changes"
 }
 
 # Install from main branch by cloning directly to the installation directory
@@ -168,8 +185,19 @@ install_from_main() {
     exit 1
   fi
 
-  # Reorganize files if needed - if the repository structure doesn't match our expected structure
-  # Check if we have the expected directory structure
+  # Remove unwanted folders
+  local unwanted_dirs=("nvidia" "web-scrapping" "backup" "containers")
+  for unwanted in "${unwanted_dirs[@]}"; do
+    if [[ -d "$INSTALL_DIR/$unwanted" ]]; then
+      rm -rf "$INSTALL_DIR/$unwanted"
+      log_info "Removed unwanted folder: $unwanted"
+    fi
+  done
+
+  # Ensure all scripts are executable
+  find "$INSTALL_DIR" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.js" \) -exec chmod +x {} \;
+
+  # Check if we have the expected directory structure (should be true after removing unwanted)
   local has_expected_structure=true
   for dir in "${!SCRIPT_DIRS[@]}"; do
     if [[ ! -d "$INSTALL_DIR/$dir" ]]; then
@@ -179,72 +207,16 @@ install_from_main() {
   done
 
   if [[ "$has_expected_structure" == "false" ]]; then
-    log_info "Repository structure differs from expected. Reorganizing..."
-
-    # Create a temporary directory for reorganization
-    local temp_dir="$(mktemp -d)"
-
-    # Look for script files in the repository and move them to the appropriate category
-    find "$INSTALL_DIR" -type f -name "*.sh" | while read script; do
-      local script_name="$(basename "$script")"
-      local script_path="$(dirname "$script")"
-
-      # Determine script category from path or content
-      local category=""
-      if [[ "$script_path" == *"/system/info"* ]]; then
-        category="system/info"
-      elif [[ "$script_path" == *"/package-management"* ]]; then
-        category="package-management"
-      elif [[ "$script_path" == *"/power"* ]]; then
-        category="power"
-      else
-        # Default category based on script name or content
-        if [[ "$script_name" == *"storage"* ]]; then
-          category="system/info"
-        elif [[ "$script_name" == *"package"* || "$script_name" == *"flatpak"* ]]; then
-          category="package-management"
-        elif [[ "$script_name" == *"power"* || "$script_name" == *"bright"* ]]; then
-          category="power"
-        else
-          # Examine content for hints about category
-          if grep -q "storage\|disk\|memory\|cpu" "$script"; then
-            category="system/info"
-          elif grep -q "package\|dnf\|apt\|flatpak" "$script"; then
-            category="package-management"
-          elif grep -q "power\|battery\|brightness\|suspend" "$script"; then
-            category="power"
-          else
-            # If we can't determine, put in a misc category
-            category="misc"
-          fi
-        fi
-      fi
-
-      # Create category directory in temp dir
-      ensure_dir_exists "$temp_dir/$category"
-
-      # Copy script to temp directory
-      cp "$script" "$temp_dir/$category/"
-      chmod +x "$temp_dir/$category/$script_name"
-    done
-
-    # Clean installation directory except .git
-    find "$INSTALL_DIR" -mindepth 1 -not -path "$INSTALL_DIR/.git*" -delete
-
-    # Move reorganized files back to installation directory
-    cp -r "$temp_dir/"* "$INSTALL_DIR/"
-
-    # Clean up
-    rm -rf "$temp_dir"
+    log_warn "Repository structure differs from expected after cleanup."
   fi
 
   log_success "Main branch installation complete!"
-  log_info "Scripts installed to: $INSTALL_DIR"
-  log_info "Run scripts from: $INSTALL_DIR/<category>/<script>.sh"
+  log_info "Folders installed to: $INSTALL_DIR"
+  log_info "Run scripts from: $INSTALL_DIR/<folder>/<subpath>/<script>"
 }
 
 # Parse command-line arguments
-MODE="main" # Default mode is main branch
+MODE="current" # Default mode is current directory
 FORCE="false"
 VERBOSE="false"
 CUSTOM_INSTALL_DIR=""
@@ -254,10 +226,6 @@ while [[ $# -gt 0 ]]; do
   -h | --help)
     print_usage
     exit 0
-    ;;
-  -d | --dev)
-    MODE="dev"
-    shift
     ;;
   -m | --main)
     MODE="main"
@@ -290,10 +258,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Run installation based on selected mode
-if [[ "$MODE" == "dev" ]]; then
-  install_from_dev
-else
+if [[ "$MODE" == "main" ]]; then
   install_from_main
+else
+  install_from_current
 fi
 
 exit 0

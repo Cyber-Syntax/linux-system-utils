@@ -2,18 +2,16 @@
 
 This file provides guidance to agents when working with code in this repository.
 
-## Project Overview
-
-This repository contains various scripts and utilities implemented in Python and Bash.
-
 ## General Guidelines
 
 1. KISS (Keep It Simple, Stupid): Aim for simplicity and clarity. Avoid unnecessary abstractions or metaprogramming.
 2. DRY (Don't Repeat Yourself): Reuse code appropriately but avoid over-engineering. Each command handler has single responsibility.
-3. YAGNI (You Aren't Gonna Need It): Always implement things when you actually need them, never when you just foresee that you need them.
-4. **ALWAYS** use `ruff check <filepath>` on each python file you modify to ensure proper formatting and linting.
-    - Use `ruff format <filepath>` on each python file you modify to ensure proper formatting.
-    - Use `ruff check --fix <filepath>` on each python file you modify to fix any fixable errors.
+3. Confirm understanding before making changes: If you're unsure about the purpose of a piece of code, ask for clarification rather than making assumptions.
+4. ALWAYS use `ruff check <filepath>` on each Python file you modify to ensure proper linting and formatting:
+    - Use `ruff check --fix <filepath>` to automatically fix any fixable errors.
+    - Use `ruff format path/to/file.py` to format a specific file.
+    - Use `ruff format path/to/code/` to format all files in `path/to/code` (and any subdirectories).
+    - Use `ruff format` to format all files in the current directory.
 5. **ALWAYS** use `shellcheck` on each file you modify to ensure proper formatting and linting. This runs both syntax and lint checks on individual files. Unless you want to lint and format multiple files, then use `shellcheck -f` and `shellcheck -l` instead.
 6. When creating bash scripts, prefer plain bash constructs and avoid unnecessary complexity. Keep functions small and focused. Use built-in bash features where appropriate, but avoid overusing them.
 

@@ -98,85 +98,68 @@ git_range="${default_branch}...${current_branch}"
 
 # Get commits between default and current
 info "Collecting commits between ${default_branch} and ${current_branch}..."
-commit_count=$(git rev-list --count "${git_range}" 2>/dev/null || echo "0")
-if [[ "${commit_count}" -eq 0 ]]; then
+commits=$(git rev-list --reverse "${git_range}" 2>/dev/null)
+if [[ -z "$commits" ]]; then
   warn "No commits on ${current_branch} relative to ${default_branch}."
   exit 0
 fi
 
-# Commit entries with body (subject + indented body)
+# Commit entries with body and files
 commit_summaries=""
-# Use NUL-separated commits to safely handle arbitrary commit bodies
-# Use process substitution to avoid running the while loop in a subshell
-while IFS= read -r -d $'\0' entry; do
-  # entry lines:
-  # 1: short hash
-  # 2: author
-  # 3: subject
-  # 4..: body (may be empty)
-  short_hash=$(printf '%s' "$entry" | sed -n '1p')
-  author=$(printf '%s' "$entry" | sed -n '2p')
-  subject=$(printf '%s' "$entry" | sed -n '3p')
-  body=$(printf '%s' "$entry" | sed -n '4,$p')
-  # Append header line
-  commit_summaries+="${short_hash} ${subject} (${author})"$'\n'
+for commit in $commits; do
+  short_hash=$(git rev-parse --short "$commit")
+  author=$(git log -1 --pretty=format:'%an' "$commit")
+  subject=$(git log -1 --pretty=format:'%s' "$commit")
+  body=$(git log -1 --pretty=format:'%b' "$commit")
+  commit_summaries+="- ${short_hash} ${subject} (${author})"$'\n'
   # If body non-empty (ignoring pure whitespace), indent each body line
   if [[ -n "${body// /}" ]]; then
     while IFS= read -r bl; do
       commit_summaries+="    ${bl}"$'\n'
     done <<<"$(printf '%s' "${body}")"
   fi
-done < <(git --no-pager log --pretty=format:'%h%n%an%n%s%n%b%x00' "${git_range}")
-
-# Changed files and statuses
-file_changes_raw=$(git --no-pager diff --name-status "${git_range}")
-# If diff returns nothing (shouldn't since commit_count > 0), guard it
-if [[ -z "${file_changes_raw}" ]]; then
-  file_changes="(no file list)"
-else
-  # Transform status codes into human readable lines
-  # Example lines:
-  #   A\tpath/to/file
-  #   M\tpath/to/file
-  #   D\tpath/to/file
-  #   R100\told\tnew
-  file_changes=""
-  while IFS= read -r line; do
-    # Split fields
-    status=$(printf "%s" "${line}" | awk '{print $1}')
-    rest=$(printf "%s" "${line}" | cut -f2-)
-    case "${status:0:1}" in
-    A)
-      verb="Added"
-      file="${rest}"
-      ;;
-    M)
-      verb="Modified"
-      file="${rest}"
-      ;;
-    D)
-      verb="Deleted"
-      file="${rest}"
-      ;;
-    R) # rename: rest contains "old<TAB>new" - preserve new name
-      # We try to extract the last field as new path
-      new_path=$(printf "%s" "${rest}" | awk -F $'\t' '{print $NF}')
-      old_path=$(printf "%s" "${rest}" | awk -F $'\t' '{print $(NF-1)}')
-      verb="Renamed"
-      file="${old_path} -> ${new_path}"
-      ;;
-    C)
-      verb="Copied"
-      file="${rest}"
-      ;;
-    *)
-      verb="${status}"
-      file="${rest}"
-      ;;
-    esac
-    file_changes="${file_changes}- ${verb}: ${file}"$'\n'
-  done <<<"${file_changes_raw}"
-fi
+  # Files changed in this commit
+  file_changes_raw=$(git show --name-status --pretty="" "$commit")
+  if [[ -n "$file_changes_raw" ]]; then
+    commit_summaries+="    Files changed:"$'\n'
+    while IFS= read -r line; do
+      if [[ -z "$line" ]]; then continue; fi
+      status=$(printf "%s" "${line}" | awk '{print $1}')
+      rest=$(printf "%s" "${line}" | cut -f2-)
+      case "${status:0:1}" in
+      A)
+        verb="Added"
+        file="${rest}"
+        ;;
+      M)
+        verb="Modified"
+        file="${rest}"
+        ;;
+      D)
+        verb="Deleted"
+        file="${rest}"
+        ;;
+      R) # rename: rest contains "old<TAB>new" - preserve new name
+        # We try to extract the last field as new path
+        new_path=$(printf "%s" "${rest}" | awk -F $'\t' '{print $NF}')
+        old_path=$(printf "%s" "${rest}" | awk -F $'\t' '{print $(NF-1)}')
+        verb="Renamed"
+        file="${old_path} -> ${new_path}"
+        ;;
+      C)
+        verb="Copied"
+        file="${rest}"
+        ;;
+      *)
+        verb="${status}"
+        file="${rest}"
+        ;;
+      esac
+      commit_summaries+="      - ${verb}: ${file}"$'\n'
+    done <<<"${file_changes_raw}"
+  fi
+  commit_summaries+=$'\n'
+done
 
 # Optional user-supplied notes (all args)
 if [[ $# -gt 0 ]]; then
@@ -196,24 +179,7 @@ if [[ -n "${notes}" ]]; then
   entry_builder+="Notes: ${notes}"$'\n'$'\n'
 fi
 entry_builder+="Summary of commits:"$'\n'
-# Format commit_summaries: prefix commit header lines with "- " and
-# preserve already-indented body lines (4-space indentation).
-while IFS= read -r l; do
-  if [[ -z "${l}" ]]; then
-    entry_builder+=$'\n'
-    continue
-  fi
-  if [[ "${l:0:4}" == "    " ]]; then
-    # body line already indented
-    entry_builder+="${l}"$'\n'
-  else
-    # commit header line
-    entry_builder+="- ${l}"$'\n'
-  fi
-done <<<"${commit_summaries}"
-entry_builder+=$'\n'
-entry_builder+="Files changed:"$'\n'
-entry_builder+="${file_changes}"$'\n'
+entry_builder+="${commit_summaries}"
 
 # Final entry variable
 changelog_entry="${entry_builder}"

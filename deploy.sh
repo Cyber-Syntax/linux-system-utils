@@ -16,6 +16,9 @@ NC='\033[0m' # No Color
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 
+# Binary installation directory
+BIN_DIR="${HOME}/.local/bin"
+
 # Repo and installation directories
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_DIR="${XDG_DATA_HOME}/linux-system-utils"
@@ -47,6 +50,7 @@ print_usage() {
   echo "  -f, --force       Force installation (overwrite existing files)"
   echo "  -v, --verbose     Verbose output"
   echo "  -t, --target DIR  Specify custom installation directory"
+  echo "  -b, --binary      Install changelog.sh as a global binary to ~/.local/bin"
   echo
   echo "Installation directory: $INSTALL_DIR"
   echo
@@ -105,6 +109,19 @@ copy_script() {
   cp "$src" "$dest"
   chmod +x "$dest"
   log_info "Installed: $dest"
+}
+
+# Install binaries to ~/.local/bin
+install_binaries() {
+  ensure_dir_exists "$BIN_DIR"
+
+  local changelog_src="${INSTALL_DIR}/github/changelog.sh"
+  if [[ -f "$changelog_src" ]]; then
+    copy_script "$changelog_src" "${BIN_DIR}/changelog"
+    log_success "Installed changelog command to: ${BIN_DIR}/changelog"
+  else
+    log_warn "changelog.sh not found in installation directory"
+  fi
 }
 
 # Install from current directory
@@ -220,6 +237,7 @@ MODE="current" # Default mode is current directory
 FORCE="false"
 VERBOSE="false"
 CUSTOM_INSTALL_DIR=""
+INSTALL_BINARY="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -249,6 +267,10 @@ while [[ $# -gt 0 ]]; do
       exit 1
     fi
     ;;
+  -b | --binary)
+    INSTALL_BINARY="true"
+    shift
+    ;;
   *)
     log_error "Unknown option: $1"
     print_usage
@@ -262,6 +284,11 @@ if [[ "$MODE" == "main" ]]; then
   install_from_main
 else
   install_from_current
+fi
+
+# Install binaries if requested
+if [[ "$INSTALL_BINARY" == "true" ]]; then
+  install_binaries
 fi
 
 exit 0

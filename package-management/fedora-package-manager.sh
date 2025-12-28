@@ -33,8 +33,6 @@
 # --- Constants ---
 
 # DNF exit codes
-DNF_EXIT_OK=0
-DNF_EXIT_UPDATES_AVAILABLE=100
 DNF_EXIT_TIMEOUT=124
 
 # --- Functions ---
@@ -88,15 +86,14 @@ get_dnf_update_count() {
   fi
 
   # Use timeout command to kill after 15 seconds if stuck
-  # -y to automatically answer yes to any prompts like GPG key imports
-  dnf_output=$(timeout 15 dnf check-update --refresh -y 2>/dev/null)
+  dnf_output=$(timeout 15 dnf updateinfo -q list 2>/dev/null)
   dnf_exit_status=$?
 
-  if [ $dnf_exit_status -eq $DNF_EXIT_OK ]; then
-    count="0"
-  elif [ $dnf_exit_status -eq $DNF_EXIT_UPDATES_AVAILABLE ]; then
-    # Count actual package lines (excluding headers and empty lines)
-    count=$(echo "$dnf_output" | grep -v "^Last metadata" | grep -v "^$" | grep -v "^Upgrade" | grep -c '^')
+  if [ $dnf_exit_status -eq 0 ]; then
+    count=$(echo "$dnf_output" | wc -l)
+    if echo "$dnf_output" | grep -q "No updates needed"; then
+      count=0
+    fi
   elif [ $dnf_exit_status -eq $DNF_EXIT_TIMEOUT ]; then
     count="!" # Timeout indicator
   else
@@ -121,33 +118,13 @@ get_flatpak_update_count() {
     return
   fi
 
-  # First try with remote-ls --updates which is more reliable
-  flatpak_output=$(flatpak remote-ls --updates 2>/dev/null)
+  flatpak_output=$(timeout 15 flatpak update 2>/dev/null)
   flatpak_exit_status=$?
 
   if [ $flatpak_exit_status -eq 0 ]; then
-    if [ -z "$flatpak_output" ]; then
-      count="0"
-    else
-      # Count lines in the output for available updates
-      count=$(echo "$flatpak_output" | grep -v "^$" | grep -c '^')
-    fi
+    count=$(echo "$flatpak_output" | tail -n +5 | grep -Ecv "^$|^Proceed|^Nothing")
   else
-    # Fallback to the original method if remote-ls fails
-    flatpak_output=$(flatpak update --no-deploy 2>/dev/null || echo "Error")
-
-    if [ "$flatpak_output" = "Error" ]; then
-      count="?"
-    elif echo "$flatpak_output" | grep -q "Nothing to do."; then
-      count="0"
-    else
-      # Count update lines with a more flexible pattern
-      count=$(echo "$flatpak_output" | grep -E '^\s*[0-9]+\.\s+' | grep -c '^')
-      # If count is 0 but "Nothing to do" is not found, it's likely an error or unexpected output
-      if [ "$count" = "0" ] && ! echo "$flatpak_output" | grep -q "Nothing to do."; then
-        count="?"
-      fi
-    fi
+    count="?"
   fi
   echo "$count"
 }
@@ -243,11 +220,10 @@ check_status() {
   [ "$fedora_count" = "N/A" ] && fedora_count="Not Available"   # Not available
   [ "$flatpak_count" = "N/A" ] && flatpak_count="Not Available" # Not available
 
-  # If both systems are up-to-date (both original values were "0"), show only a single check mark
-  if [ "$original_fedora" = "0" ] && [ "$original_flatpak" = "0" ]; then
-    echo "Up-to-date"
+  if { [ "$original_fedora" = "0" ] || [ "$original_fedora" = "N/A" ]; } && { [ "$original_flatpak" = "0" ] || [ "$original_flatpak" = "N/A" ]; }; then
+    echo ""
   else
-    echo "Fedora: $fedora_count | Flatpak: $flatpak_count"
+    echo "Fedora: $original_fedora | Flatpak: $original_flatpak"
   fi
 }
 

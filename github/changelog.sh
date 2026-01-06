@@ -194,47 +194,12 @@ printf '%s\n' "------------------------------------------------------------"
 printf '%s\n' "${changelog_entry}"
 printf '%s\n' "------------------------------------------------------------"
 
-# Confirm with the user
-printf "\nDo you want to prepend this entry to %s ? [y/N]: " "${changelog_path}"
-read -r yn
-case "${yn}" in
-[yY] | [yY][eE][sS]) ;;
-*)
-  warn "Aborted by user. No changes written."
-  exit 0
-  ;;
-esac
-
-# Ensure CHANGELOG exists (create if needed)
-if [[ ! -f "${changelog_path}" ]]; then
-  info "Creating new ${changelog_path}"
-  : >"${changelog_path}" || {
-    error "Failed to create ${changelog_path}"
-    exit 1
-  }
-fi
-
-# Prepend the entry safely using a temp file
-tmpfile=$(mktemp "${TMPDIR:-/tmp}/changelog.XXXXXX") || {
-  error "Failed to create a temporary file."
-  exit 1
-}
-# Write new entry then existing content
-{
-  printf '%s\n' "${changelog_entry}"
-  printf '%s\n' "$(cat "${changelog_path}")"
-} >"${tmpfile}" || {
-  rm -f "${tmpfile}"
-  error "Failed writing to temporary file."
-  exit 1
-}
-
-# Move into place
-if mv "${tmpfile}" "${changelog_path}"; then
+# Write the changelog entry directly (overwriting existing file)
+info "Writing to ${changelog_path}"
+if printf '%s\n' "${changelog_entry}" > "${changelog_path}"; then
   success "CHANGELOG_commits.md updated at ${changelog_path}"
 else
-  rm -f "${tmpfile}"
-  error "Failed to update ${changelog_path}"
+  error "Failed to write ${changelog_path}"
   exit 1
 fi
 

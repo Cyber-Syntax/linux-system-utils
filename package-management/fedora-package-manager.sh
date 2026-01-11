@@ -86,14 +86,13 @@ get_dnf_update_count() {
   fi
 
   # Use timeout command to kill after 15 seconds if stuck
-  dnf_output=$(timeout 15 dnf updateinfo -q list 2>/dev/null)
+  dnf_output=$(timeout 15 dnf check-update 2>/dev/null)
   dnf_exit_status=$?
 
   if [ $dnf_exit_status -eq 0 ]; then
+    count=0
+  elif [ $dnf_exit_status -eq 100 ]; then
     count=$(echo "$dnf_output" | wc -l)
-    if echo "$dnf_output" | grep -q "No updates needed"; then
-      count=0
-    fi
   elif [ $dnf_exit_status -eq $DNF_EXIT_TIMEOUT ]; then
     count="!" # Timeout indicator
   else

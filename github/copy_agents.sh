@@ -68,12 +68,10 @@
 # Workflow:
 # 1. Go global repo and git pull latest changes
 # 2. Check if any of the above files have been updated in the global repo
-# 3. If yes; backup those updated files on the copilot-instructions repo with .bak extension(only updated on the awesome-copilot repo)
-# 4. Copy those files from awesome-copilot repo to copilot-instructions repo
-# 5. Print summary of copied files
+# 3. If yes; copy those files from awesome-copilot repo to copilot-instructions repo
+# 4. Print summary of copied files
 #
 # Rules:
-# - Backup existing files in my github repo with .bak extension to avoid data loss for custom changes
 # - Overwrite existing files in my github repo with the copied files
 # - Print a summary of copied files
 #
@@ -142,9 +140,15 @@ readonly PROMPT_FILES=(
   "write-coding-standards-from-file.prompt.md"
 )
 
+# Copy full folder because skills are folder based
+readonly SKILLS=(
+  "prd"
+  "refactor"
+  "git-commit"
+)
+
 # Counters for summary
 COPIED_COUNT=0
-BACKED_UP_COUNT=0
 ERROR_COUNT=0
 
 cleanup() {
@@ -204,21 +208,6 @@ files_differ() {
   fi
 }
 
-backup_file() {
-  local file_path="$1"
-
-  if [[ -f "$file_path" ]]; then
-    local backup_path="${file_path}.bak"
-    if cp "$file_path" "$backup_path"; then
-      echo "  Backed up: $(basename "$file_path")"
-      ((BACKED_UP_COUNT += 1))
-    else
-      echo "  Warning: Failed to backup $(basename "$file_path")" >&2
-      ((ERROR_COUNT += 1))
-    fi
-  fi
-}
-
 copy_file() {
   local source_file="$1"
   local dest_file="$2"
@@ -244,6 +233,69 @@ copy_file() {
   fi
 }
 
+directories_differ() {
+  local source_dir="$1"
+  local dest_dir="$2"
+
+  # If destination doesn't exist, they differ
+  if [[ ! -d "$dest_dir" ]]; then
+    return 0
+  fi
+
+  # Compare directories recursively
+  if ! diff -r -q "$source_dir" "$dest_dir" >/dev/null 2>&1; then
+    return 0 # Different
+  else
+    return 1 # Same
+  fi
+}
+
+copy_directory() {
+  local source_dir="$1"
+  local dest_dir="$2"
+
+  # Ensure destination parent directory exists
+  local dest_parent
+  dest_parent="$(dirname "$dest_dir")"
+  if [[ ! -d "$dest_parent" ]]; then
+    if ! mkdir -p "$dest_parent"; then
+      echo "  Error: Failed to create directory $dest_parent" >&2
+      ((ERROR_COUNT += 1))
+      return 1
+    fi
+  fi
+
+  if cp -r "$source_dir" "$dest_dir"; then
+    echo "  Copied: $(basename "$source_dir")/"
+    ((COPIED_COUNT += 1))
+  else
+    echo "  Error: Failed to copy $(basename "$source_dir")" >&2
+    ((ERROR_COUNT += 1))
+    return 1
+  fi
+}
+
+process_skills() {
+  echo "Processing skills folders..."
+
+  for skill in "${SKILLS[@]}"; do
+    local source_dir="$AWESOME_COPILOT_REPO_PATH/skills/$skill"
+    local dest_dir="$MY_GITHUB_REPO_PATH/skills/$skill"
+
+    if [[ ! -d "$source_dir" ]]; then
+      echo "  Warning: Source skill directory not found: $skill" >&2
+      ((ERROR_COUNT += 1))
+      continue
+    fi
+
+    if directories_differ "$source_dir" "$dest_dir"; then
+      copy_directory "$source_dir" "$dest_dir"
+    else
+      echo "  Skipped: $skill (no changes)"
+    fi
+  done
+}
+
 process_files() {
   local source_dir="$1"
   local dest_dir="$2"
@@ -262,7 +314,6 @@ process_files() {
     fi
 
     if files_differ "$source_file" "$dest_file"; then
-      backup_file "$dest_file"
       copy_file "$source_file" "$dest_file"
     else
       echo "  Skipped: $file (no changes)"
@@ -275,7 +326,6 @@ print_summary() {
   echo "Copy Summary"
   echo "============================================================================"
   echo "Files copied: $COPIED_COUNT"
-  echo "Files backed up: $BACKED_UP_COUNT"
   echo "Errors encountered: $ERROR_COUNT"
 
   if [[ $ERROR_COUNT -gt 0 ]]; then
@@ -304,6 +354,9 @@ main() {
   echo
 
   process_files "prompts" "prompts" "${PROMPT_FILES[@]}"
+  echo
+
+  process_skills
   echo
 
   print_summary

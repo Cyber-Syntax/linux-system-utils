@@ -112,15 +112,25 @@ copy_script() {
 }
 
 # Install binaries to ~/.local/bin
+# Binaries: changelog.sh, copy_agents.sh
 install_binaries() {
   ensure_dir_exists "$BIN_DIR"
 
   local changelog_src="${INSTALL_DIR}/github/changelog.sh"
+  local copy_agents_src="${INSTALL_DIR}/github/copy_agents.sh"
+
   if [[ -f "$changelog_src" ]]; then
     copy_script "$changelog_src" "${BIN_DIR}/changelog"
     log_success "Installed changelog command to: ${BIN_DIR}/changelog"
   else
     log_warn "changelog.sh not found in installation directory"
+  fi
+
+  if [[ -f "$copy_agents_src" ]]; then
+    copy_script "$copy_agents_src" "${BIN_DIR}/copy_agents"
+    log_success "Installed copy_agents command to: ${BIN_DIR}/copy_agents"
+  else
+    log_warn "copy_agents.sh not found in installation directory"
   fi
 }
 

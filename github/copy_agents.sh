@@ -173,7 +173,7 @@ validate_requirements() {
 
 pull_latest_changes() {
   echo "Pulling latest changes from global repo..."
-  
+
   cd "$AWESOME_COPILOT_REPO_PATH" || {
     echo "Error: Failed to change to global repo directory" >&2
     return 1
@@ -183,38 +183,38 @@ pull_latest_changes() {
     echo "Error: Failed to pull latest changes from global repo" >&2
     return 1
   fi
-  
+
   echo "Successfully pulled latest changes"
 }
 
 files_differ() {
   local source_file="$1"
   local dest_file="$2"
-  
+
   # If destination doesn't exist, files are different
   if [[ ! -f "$dest_file" ]]; then
     return 0
   fi
-  
+
   # Compare files using diff
   if ! diff -q "$source_file" "$dest_file" >/dev/null 2>&1; then
-    return 0  # Files are different
+    return 0 # Files are different
   else
-    return 1  # Files are the same
+    return 1 # Files are the same
   fi
 }
 
 backup_file() {
   local file_path="$1"
-  
+
   if [[ -f "$file_path" ]]; then
     local backup_path="${file_path}.bak"
     if cp "$file_path" "$backup_path"; then
       echo "  Backed up: $(basename "$file_path")"
-      ((BACKED_UP_COUNT++))
+      ((BACKED_UP_COUNT += 1))
     else
       echo "  Warning: Failed to backup $(basename "$file_path")" >&2
-      ((ERROR_COUNT++))
+      ((ERROR_COUNT += 1))
     fi
   fi
 }
@@ -222,24 +222,24 @@ backup_file() {
 copy_file() {
   local source_file="$1"
   local dest_file="$2"
-  
+
   # Ensure destination directory exists
   local dest_dir
   dest_dir="$(dirname "$dest_file")"
   if [[ ! -d "$dest_dir" ]]; then
     if ! mkdir -p "$dest_dir"; then
       echo "  Error: Failed to create directory $dest_dir" >&2
-      ((ERROR_COUNT++))
+      ((ERROR_COUNT += 1))
       return 1
     fi
   fi
-  
+
   if cp "$source_file" "$dest_file"; then
     echo "  Copied: $(basename "$source_file")"
-    ((COPIED_COUNT++))
+    ((COPIED_COUNT += 1))
   else
     echo "  Error: Failed to copy $(basename "$source_file")" >&2
-    ((ERROR_COUNT++))
+    ((ERROR_COUNT += 1))
     return 1
   fi
 }
@@ -247,20 +247,20 @@ copy_file() {
 process_files() {
   local source_dir="$1"
   local dest_dir="$2"
-  local files=("${@:3}")  # Remaining arguments are file names
-  
+  local files=("${@:3}") # Remaining arguments are file names
+
   echo "Processing $source_dir files..."
-  
+
   for file in "${files[@]}"; do
     local source_file="$AWESOME_COPILOT_REPO_PATH/$source_dir/$file"
     local dest_file="$MY_GITHUB_REPO_PATH/$dest_dir/$file"
-    
+
     if [[ ! -f "$source_file" ]]; then
       echo "  Warning: Source file not found: $file" >&2
-      ((ERROR_COUNT++))
+      ((ERROR_COUNT += 1))
       continue
     fi
-    
+
     if files_differ "$source_file" "$dest_file"; then
       backup_file "$dest_file"
       copy_file "$source_file" "$dest_file"
@@ -277,7 +277,7 @@ print_summary() {
   echo "Files copied: $COPIED_COUNT"
   echo "Files backed up: $BACKED_UP_COUNT"
   echo "Errors encountered: $ERROR_COUNT"
-  
+
   if [[ $ERROR_COUNT -gt 0 ]]; then
     echo "Warning: Some operations failed. Please check the output above."
     exit 1
@@ -288,24 +288,24 @@ print_summary() {
 
 main() {
   validate_requirements
-  
+
   echo "============================================================================"
   echo "Copy Agent Files Script Started"
   echo "============================================================================"
-  
+
   pull_latest_changes
   echo
-  
+
   # Process each category of files
   process_files "instructions" "instructions" "${INSTRUCTION_FILES[@]}"
   echo
-  
+
   process_files "agents" "agents" "${AGENT_FILES[@]}"
   echo
-  
+
   process_files "prompts" "prompts" "${PROMPT_FILES[@]}"
   echo
-  
+
   print_summary
 }
 

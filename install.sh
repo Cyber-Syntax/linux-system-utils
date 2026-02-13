@@ -38,6 +38,7 @@ SCRIPT_DIRS["network"]="${INSTALL_DIR}/network"
 SCRIPT_DIRS["package-management"]="${INSTALL_DIR}/package-management"
 SCRIPT_DIRS["power"]="${INSTALL_DIR}/power"
 SCRIPT_DIRS["web-scrapping"]="${INSTALL_DIR}/web-scrapping"
+SCRIPT_DIRS["website"]="${INSTALL_DIR}/website"
 
 # Print usage information
 print_usage() {
@@ -98,7 +99,8 @@ ensure_dir_exists() {
 copy_script() {
   local src="$1"
   local dest="$2"
-  local base_dest_dir="$(dirname "$dest")"
+  local base_dest_dir
+  base_dest_dir="$(dirname "$dest")"
 
   ensure_dir_exists "$base_dest_dir"
 
@@ -152,12 +154,13 @@ install_from_current() {
   ensure_dir_exists "$CONFIG_DIR"
 
   # Get current branch for logging
-  local current_branch="$(cd "$REPO_DIR" && git branch --show-current 2>/dev/null || echo 'unknown')"
+  local current_branch
+  current_branch="$(cd "$REPO_DIR" && git branch --show-current 2>/dev/null || echo 'unknown')"
   log_info "Installing from branch: $current_branch"
 
   # Copy entire folders from the current directory to INSTALL_DIR
   for dir in "${!SCRIPT_DIRS[@]}"; do
-    local source_dir="${REPO_DIR}/${dir}"
+    local source_dir="${REPO_DIR}/src/${dir}"
     local target_dir="${SCRIPT_DIRS[$dir]}"
 
     if [[ -d "$source_dir" ]]; then
@@ -222,13 +225,21 @@ install_from_main() {
   fi
 
   # Remove unwanted folders
-  local unwanted_dirs=("nvidia" "backup" "containers")
+  local unwanted_dirs=("backup" "containers")
   for unwanted in "${unwanted_dirs[@]}"; do
-    if [[ -d "$INSTALL_DIR/$unwanted" ]]; then
-      rm -rf "$INSTALL_DIR/$unwanted"
-      log_info "Removed unwanted folder: $unwanted"
+    if [[ -d "$INSTALL_DIR/src/$unwanted" ]]; then
+      rm -rf "$INSTALL_DIR/src/$unwanted"
+      log_info "Removed unwanted folder: src/$unwanted"
     fi
   done
+
+  # Move src contents to INSTALL_DIR
+  if [[ -d "$INSTALL_DIR/src" ]]; then
+    shopt -s dotglob
+    mv "$INSTALL_DIR/src"/* "$INSTALL_DIR"/ 2>/dev/null || true
+    rmdir "$INSTALL_DIR/src"
+    log_info "Moved src contents to installation directory"
+  fi
 
   # Ensure all scripts are executable
   find "$INSTALL_DIR" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.js" \) -exec chmod +x {} \;

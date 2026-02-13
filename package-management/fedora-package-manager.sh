@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (c) 2025, Cyber-Syntax Serif
-# All rights reserved.
+# Copyright (c) 2026, Cyber-Syntax Serif
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -251,21 +250,21 @@ check_dependencies
 
 # Parse command line options
 case "$1" in
-  --status)
-    check_status
-    ;;
-  --update)
-    update_packages
-    ;;
-  --help | -h | "")
-    show_help
-    ;;
-  *)
-    echo "Invalid option: $1"
-    echo ""
-    show_help
-    exit 1
-    ;;
+--status)
+  check_status
+  ;;
+--update)
+  update_packages
+  ;;
+--help | -h | "")
+  show_help
+  ;;
+*)
+  echo "Invalid option: $1"
+  echo ""
+  show_help
+  exit 1
+  ;;
 esac
 
 exit 0

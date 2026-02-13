@@ -37,6 +37,7 @@ SCRIPT_DIRS["general"]="${INSTALL_DIR}/general"
 SCRIPT_DIRS["network"]="${INSTALL_DIR}/network"
 SCRIPT_DIRS["package-management"]="${INSTALL_DIR}/package-management"
 SCRIPT_DIRS["power"]="${INSTALL_DIR}/power"
+SCRIPT_DIRS["web-scrapping"]="${INSTALL_DIR}/web-scrapping"
 
 # Print usage information
 print_usage() {
@@ -112,12 +113,20 @@ copy_script() {
 }
 
 # Install binaries to ~/.local/bin
-# Binaries: changelog.sh, copy_agents.sh
+# Binaries: changelog.sh, copy_agents.sh, scrap.py
 install_binaries() {
   ensure_dir_exists "$BIN_DIR"
 
   local changelog_src="${INSTALL_DIR}/github/changelog.sh"
   local copy_agents_src="${INSTALL_DIR}/github/copy_agents.sh"
+  local scrap_src="${INSTALL_DIR}/web-scrapping/scrap.py"
+
+  if [[ -f "$scrap_src" ]]; then
+    copy_script "$scrap_src" "${BIN_DIR}/scrap"
+    log_success "Installed scrap command to: ${BIN_DIR}/scrap"
+  else
+    log_warn "scrap.py not found in installation directory"
+  fi
 
   if [[ -f "$changelog_src" ]]; then
     copy_script "$changelog_src" "${BIN_DIR}/changelog"
@@ -213,7 +222,7 @@ install_from_main() {
   fi
 
   # Remove unwanted folders
-  local unwanted_dirs=("nvidia" "web-scrapping" "backup" "containers")
+  local unwanted_dirs=("nvidia" "backup" "containers")
   for unwanted in "${unwanted_dirs[@]}"; do
     if [[ -d "$INSTALL_DIR/$unwanted" ]]; then
       rm -rf "$INSTALL_DIR/$unwanted"

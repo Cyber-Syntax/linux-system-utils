@@ -1,21 +1,29 @@
+#!/usr/bin/env -S uv run --script
+#
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
-#     "beautifulsoup4>=4.14.3",
-#     "certifi>=2026.1.4",
-#     "charset-normalizer>=3.4.4",
-#     "idna>=3.11",
-#     "markdownify>=1.2.2",
-#     "requests>=2.32.5",
-#     "six>=1.17.0",
-#     "soupsieve>=2.8.1",
-#     "typing-extensions>=4.15.0",
-#     "urllib3>=2.6.3",
+#     "argparse",
+#     "beautifulsoup4",
+#     "certifi",
+#     "charset-normalizer",
+#     "idna",
+#     "markdownify",
+#     "requests",
+#     "six",
+#     "soupsieve",
+#     "typing-extensions",
+#     "urllib3",
 # ]
 # ///
 """A simple web scraper that fetches a webpage, extracts the <article> tag,
-converts it to Markdown, and saves it to a file."""
+converts it to Markdown, and saves it to a file.
 
+Usage:
+    uv run python scrap.py <url> [output_file]
+"""
+
+import argparse
 import sys
 from pathlib import Path
 from typing import Optional
@@ -44,7 +52,7 @@ def extract_article(html: str) -> str:
 
 def parse_args(argv: list[str]) -> tuple[str, Optional[str]]:
     """
-    Parse command-line arguments for URL and optional output file.
+    Parse command-line arguments for URL and optional output file using argparse.
 
     Args:
         argv (list[str]): List of command-line arguments.
@@ -52,12 +60,16 @@ def parse_args(argv: list[str]) -> tuple[str, Optional[str]]:
     Returns:
         tuple[str, Optional[str]]: URL and optional output file path.
     """
-    if len(argv) < 2:
-        print("Usage: python scrap.py <url> [output_file]", file=sys.stderr)
-        sys.exit(1)
-    url = argv[1]
-    output_file_arg = argv[2] if len(argv) > 2 else None
-    return url, output_file_arg
+    parser = argparse.ArgumentParser(
+        description="A simple web scraper that fetches a webpage, extracts the <article> tag, "
+        "converts it to Markdown, and saves it to a file."
+    )
+    parser.add_argument("url", help="The URL to scrape")
+    parser.add_argument(
+        "output_file", nargs="?", help="Optional output file path"
+    )
+    args = parser.parse_args(argv[1:])
+    return args.url, args.output_file
 
 
 def get_output_path(url: str, output_file_arg: Optional[str]) -> Path:

@@ -90,6 +90,8 @@ readonly INSTRUCTION_FILES=(
   "prompt.instructions.md"
   "instructions.instructions.md"
   "github-actions-ci-cd-best-practices.instructions.md"
+  "agents.instructions.md"
+  "agent-skills.instructions.md"
 )
 
 readonly AGENT_FILES=(

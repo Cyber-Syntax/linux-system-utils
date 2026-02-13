@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# AUTHOR: Not me but I don't remember who it was, I would be add it If I found it.
+# I refactored script to automate without interactives on my own like.
+#
 # Self-contained changelog generator that uses only git.
 #
 # - Detects the default branch (main/master or origin/HEAD fallback)
@@ -196,7 +199,7 @@ printf '%s\n' "------------------------------------------------------------"
 
 # Write the changelog entry directly (overwriting existing file)
 info "Writing to ${changelog_path}"
-if printf '%s\n' "${changelog_entry}" > "${changelog_path}"; then
+if printf '%s\n' "${changelog_entry}" >"${changelog_path}"; then
   success "CHANGELOG_commits.md updated at ${changelog_path}"
 else
   error "Failed to write ${changelog_path}"

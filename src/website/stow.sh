@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # setup.sh - Unified setup, deploy, and init script for stowing content directories (non-dotfiles)
 # Version: 1.0.0
 # Description: This script manages the setup and deployment of content directories (dev and blog)

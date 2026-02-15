@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2025, Cyber-Syntax Serif
+# Copyright (c) 2026, Cyber-Syntax Serif
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,11 +28,23 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Define mount points to check
-mounts=("/" "/home" "/root" "/backup" "/nix")
+mounts=("/" "/home" "/backup")
 warning=20
 critical=10
 
-output=""
+# Parse flags
+json=false
+simple=false
+while getopts "js" opt; do
+  case $opt in
+    j) json=true ;;
+    s) simple=true ;;
+    *) echo "Usage: $0 [-j] [-s]" >&2; exit 1 ;;
+  esac
+done
+
+output_text=""
+json_text=""
 tooltip=""
 overall_class=""
 
@@ -63,7 +75,8 @@ for m in "${mounts[@]}"; do
 
   # Only add mount points that are under the defined free-space threshold
   if [ -n "$mount_class" ]; then
-    output="${output}[${m}: ${free}% free] "
+    output_text="${output_text}[${m}: ${free}% free] "
+    json_text="${json_text}[${m}: ${free}% free] "
     tooltip="${tooltip}Filesystem: ${filesystem}\nMounted on: ${mountpoint}\nSize: ${size}\nUsed: ${used}\nAvail: ${avail}\nUse%: ${usepct}\n\n"
     # Set overall class to the most severe encountered
     if [ "$mount_class" = "critical" ]; then
@@ -75,10 +88,18 @@ for m in "${mounts[@]}"; do
 done
 
 # If no mount point is under threshold, display an OK message
-if [ -z "$output" ]; then
-  output=" "
+if [ -z "$output_text" ]; then
+  output_text="Enough free space"
+  json_text=" "
   tooltip="All mount points have sufficient free space."
 fi
 
-# Output JSON formatted for waybar
-printf '{"text": "%s", "tooltip": "%s", "class": "%s"}\n' "$output" "$tooltip" "$overall_class"
+# Output based on flags
+if $simple; then
+  echo "$output_text"
+elif $json; then
+  printf '{"text": "%s", "tooltip": "%s", "class": "%s"}\n' "$json_text" "$tooltip" "$overall_class"
+else
+  # Default to JSON output for waybar
+  printf '{"text": "%s", "tooltip": "%s", "class": "%s"}\n' "$json_text" "$tooltip" "$overall_class"
+fi

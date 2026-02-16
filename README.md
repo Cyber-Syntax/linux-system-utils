@@ -10,16 +10,18 @@ This repository contains practical utilities for system monitoring, package mana
 
 ```
 linux-system-utils/
-├── audio/             # Audio device management and media player control
-├── backup/            # Backup utilities using Borg and rsync
-├── containers/        # Container configuration files
-├── display/           # Screen layout and display configuration
-├── general/           # General-purpose utilities and configurations
-├── hardware/          # Hardware management (e.g., Bluetooth)
-├── network/           # Network testing and remote management
-├── package-management/# Package managers (DNF, Flatpak, Arch)
-├── power/             # Battery monitoring and power controls
-└── system/            # System information and maintenance
+├── audio/                 # Audio device management and media player control
+├── backup/                # Backup utilities (borg, rsync)
+├── containers/            # Container configurations and images
+├── display/               # Screen layout and display configuration
+├── general/               # General-purpose utilities and helpers
+├── hardware/              # Hardware utilities (Bluetooth, etc.)
+├── network/               # Network testing and Wake-on-LAN utilities
+├── package-management/    # DNF, Flatpak and distro helpers
+├── power/                 # Brightness, battery and power scripts
+├── system/                # System information and maintenance
+├── web-scrapping/         # Web scraping utilities and data
+└── website/               # Website deploy / stow helpers
 ```
 
 ## 🚀 Key Features
@@ -39,11 +41,18 @@ Clone the repository to your local machine:
 git clone https://github.com/cyber-syntax/linux-system-utils.git && cd linux-system-utils
 ```
 
-Make scripts executable:
+Deploy the scripts using the bundled installer (`install.sh`). The installer sets file permissions, copies files to appropriate XDG locations (for example `~/.local/share/linux-system-utils`) and can install selected scripts into `~/.local/bin`.
+
+Common usage examples:
 
 ```bash
-find . -name "*.sh" -exec chmod +x {} \;
+./install.sh            # install to XDG locations (~/.local/share/linux-system-utils)
+./install.sh --binary   # install selected scripts to ~/.local/bin
+./install.sh --force    # overwrite an existing installation
+./install.sh --help     # show installer options
 ```
+
+You do not need to run `chmod` manually — `install.sh` handles permissions and deployment for you.
 
 ## 👥 Contributing
 
@@ -57,4 +66,4 @@ Contributions are welcome! Feel free to:
 
 ## 📝 License
 
-This project is licensed under the terms in the LICENSE file.
+This project is licensed under the BSD 3‑Clause License (BSD-3-Clause). See the `LICENSE` file for full text.

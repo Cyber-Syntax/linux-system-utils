@@ -20,7 +20,7 @@ This project contains useful scripts that automate some personal and general Lin
 ## Setup Commands
 
 - **Clone the repository**: `git clone https://github.com/cyber-syntax/linux-system-utils.git`
-- **Install dependencies**: Ensure Python 3.12+ is installed. Use `uv` for dependency management if applicable (run `uv sync` if a `pyproject.toml` is present).
+- **Install dependencies**: Ensure Python 3.12+ is installed. Use `uv` to start python scripts.
 - **Deploy scripts**: Run `./install.sh` to install scripts to XDG base directories (e.g., `~/.local/share/linux-system-utils`).
 - **Environment setup**: No additional environment variables required beyond standard XDG paths.
 
@@ -55,7 +55,10 @@ This project contains useful scripts that automate some personal and general Lin
 
 ### Python Scripts
 
-- **Type Annotations**: Use built-in types: `list[str]`, `dict[str, int]` (not `typing.List`, `typing.Dict`)
+- **Type Annotations**: Always use built-in generic types instead of `typing` equivalents:
+    - Use `list[str]` not `List[str]` (from typing)
+    - Use `X | None` not `Optional[X]` (from typing)
+    - Only import from `typing` when absolutely necessary (e.g., `Any`, `Union` for complex cases)
 - **PEP 8**: Enforced by ruff
 - **Datetime**: Use `astimezone()` for local time conversions
 - **Variable Names**: Use descriptive, self-explanatory names
@@ -80,119 +83,63 @@ install.sh
 containers/
 docs/
 src
-├── audio
+├── audio                                   # Audio-related scripts
 │  ├── mediaplayer.py
 │  ├── mediaplayer.sh
 │  ├── sink-change.sh
 │  └── volume-control.sh
-├── automation
+├── automation                              # General automation scripts                 
 │  ├── add-missing-i18n-variables.js
 │  ├── add-xml-missing-variables.py
-│  ├── add_missing_i18n_variables.py
-│  ├── clean-sp-backups.sh
-│  ├── coding_workflow.sh
 │  ├── copy-repos-to-vm.sh
-│  ├── rename_spaces.sh
-│  └── write-missing-variables-tr.js
-├── backup
-│  ├── basic-rsync
-│  │  ├── exclude_files.txt
-│  │  ├── main.bash
-│  │  └── test.bash
+├── backup                                  # Backup-related scripts
 │  ├── borg-backup
 │  │  ├── home-borgbackup.sh
-│  │  ├── laptop-boot_borgbackup.sh
-│  │  └── laptop-home_borgbackup.sh
 │  ├── rsync-desktop-to-laptop.sh
 │  └── rsync-laptop-to-desktop.sh
-├── containers
-│  ├── adventureland
-│  │  └── docker-compose.yml
+├── containers                              # Container-related scripts and configurations
 │  ├── autopenguinsetup_container
 │  │  ├── Dockerfile.arch
-│  │  ├── Dockerfile.debian
 │  │  ├── Dockerfile.fedora
 │  │  ├── manage.sh
 │  │  ├── podman-compose.yml
-│  │  └── README.md
-│  ├── dev_environment
-│  │  └── docker-compose.yml
-│  ├── label-studio
-│  │  └── docker-compose.yml
-│  └── Qdrant
-│     └── docker-compose.yml
-├── display
-│  ├── arandr_new.sh
-│  ├── asus_only.sh
+├── display                                 # Display configuration scripts 
 │  ├── laptop-xrandr.sh
-│  ├── tv-xrandr.sh
-│  ├── two_mon.sh
-│  ├── xrandr-movie.sh
-│  └── xrandr-root.sh
-├── games
+├── games                                   # Game-related scripts
 │  └── fs_mod_move.sh
-├── general
-│  ├── autologin.conf
+├── general                                 # General utility scripts
 │  ├── remove-html-tag.py
 │  ├── sha512_sum.sh
-│  ├── skip-prompt.conf
-│  ├── write_file.py
-│  └── write_file.sh
-├── github
+├── github                                  # GitHub-related scripts and data 
 │  ├── changelog.sh
-│  ├── copy-dot-github.sh
-│  ├── copy_agents.sh
 │  ├── data
 │  │  ├── AGENTS_bash.md
 │  │  ├── AGENTS_python.md
-│  │  ├── another_AGENTS.md
-│  │  ├── last_my_unicorn_agents.md
-│  │  ├── my_unicorn_latest_pyproject.toml
-│  │  ├── new_AGENTS.md
 │  │  ├── pyproject.toml
-│  │  ├── pyproject_aps.toml
-│  │  ├── pyproject_aps2.toml
-│  │  └── pyproject_my_unicorn.toml
-│  ├── prune-local-branch.sh
-│  ├── pull_specific_branch_specific_folder.sh
-│  └── remove_cache.sh
-├── hardware
+├── hardware                                # Hardware-related scripts
 │  ├── bluetooth-menu.sh
-│  └── bluetooth_devices.sh
-├── network
+├── network                                 # Network-related scripts
 │  ├── network_test.sh
-│  ├── poweroff_fedora.sh
-│  ├── wake_fedora.sh
 │  └── wakeonlan.wol
-├── package-management
-│  ├── arch-app-install.sh
+├── package-management                      # Package management scripts for various distros
 │  ├── arch-package-manager.sh
 │  ├── fedora-package-manager.sh
-│  └── fwupd.sh
-├── power
+├── power                                   # Power management and related scripts
 │  ├── brightness-control.sh
 │  ├── check_battery.sh
 │  ├── idle.sh
 │  ├── power-menu.sh
 │  ├── swaylock.sh
 │  └── swaylock_sleep.sh
-├── system
+├── system                                  # System information and maintenance scripts
 │  ├── info
 │  │  ├── cpu_mem_info.sh
-│  │  ├── date_time.sh
-│  │  └── storage.sh
 │  ├── maintenance
 │  │  └── gc_cache.sh
 │  └── setup-tty.sh
-├── web-scrapping
-│  ├── docs.astral.sh
-│  │  └── #creating-a-python-script.md
-│  ├── docs.pytest.org
-│  │  └── pythonpath.html#import-modes.md
-│  ├── docs.python.org
-│  │  └── logging-cookbook.html#.md
+├── web-scrapping                           # Web scraping scripts 
 │  └── scrap.py
-└── website
+└── website                                 # Personal website-related scripts and configurations
    └── stow.sh
 ```
 
@@ -234,14 +181,7 @@ find . -name "*.sh" -type f -exec shfmt -w {} \;
 shfmt -i 2 -ci -bn -w setup.sh
 ```
 
-## Pull Request Guidelines
+## Checklist Before Committing
 
 - Ensure all linting, formatting, type checking, and tests pass before submitting.
-- Title format: [category] Brief description (e.g., [audio] Fix volume control script).
 - Required checks: Run `ruff check --fix`, `ruff format`, `uv run mypy src/`, `uv run pytest`, `shellcheck`, and `shfmt` on relevant files.
-
-## Additional Notes
-
-- This is a collection of personal automation scripts; contributions are welcome but focus on Linux system utilities.
-- For debugging, add logging statements to scripts and test manually.
-- Security: Scripts may require system permissions; review for safe execution.

@@ -1,3 +1,4 @@
+plans/
 # ignore generated changelog commit file from changelog.sh
 CHANGELOG_commits.md
 

@@ -1,0 +1,111 @@
+name: Create Release from CHANGELOG
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - "CHANGELOG.md" # Only trigger when CHANGELOG.md is updated
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Extract latest version and notes
+              id: changelog
+              run: |
+                  # Extract the first version header from CHANGELOG.md
+                  # Supports both formats: ## [version] and ## version
+                  FIRST_HEADER=$(grep -m 1 '^## \[.*\]$\|^## v' CHANGELOG.md)
+
+                  # Extract version from header
+                  if [[ "$FIRST_HEADER" =~ ^\#\#\ \[(.*)\] ]]; then
+                    # Format: ## [version]
+                    VERSION="${BASH_REMATCH[1]}"
+                  elif [[ "$FIRST_HEADER" =~ ^\#\#\ (v[0-9].*) ]]; then
+                    # Format: ## vX.Y.Z
+                    VERSION="${BASH_REMATCH[1]}"
+                  else
+                    echo "No valid version header found in CHANGELOG.md"
+                    exit 1
+                  fi
+
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+                  echo "Found version: $VERSION"
+
+                  # Check if version is "Unreleased"
+                  if [[ "$VERSION" =~ ^[Uu]nreleased$ ]]; then
+                    echo "is_unreleased=true" >> $GITHUB_OUTPUT
+                    echo "Version is Unreleased, skipping release creation"
+                    exit 0
+                  else
+                    echo "is_unreleased=false" >> $GITHUB_OUTPUT
+                  fi
+
+                  # Extract notes for this version (everything between this version header and the next ## header)
+                  NOTES=$(awk -v ver="$VERSION" '
+                    BEGIN { found=0; capture=0; notes=""; }
+                    /^## \[/ {
+                      if (!found && index($0, ver) > 0) {
+                        found=1;
+                        capture=1;
+                        next;
+                      } else if (capture==1) {
+                        capture=0;
+                      }
+                    }
+                    /^## v/ {
+                      if (!found && index($0, ver) > 0) {
+                        found=1;
+                        capture=1;
+                        next;
+                      } else if (capture==1) {
+                        capture=0;
+                      }
+                    }
+                    capture==1 { notes = notes $0 "\n"; }
+                    END { print notes; }
+                  ' CHANGELOG.md)
+
+                  # Save notes to output with correct GitHub multiline syntax
+                  EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+                  echo "notes<<$EOF" >> $GITHUB_OUTPUT
+                  echo "$NOTES" >> $GITHUB_OUTPUT
+                  echo "$EOF" >> $GITHUB_OUTPUT
+
+                  # For debugging
+                  echo "Release notes excerpt:"
+                  echo "$NOTES" | head -10
+
+            - name: Check for existing release
+              if: steps.changelog.outputs.is_unreleased != 'true'
+              id: check_release
+              run: |
+                  VERSION=${{ steps.changelog.outputs.version }}
+                  TAG="v$VERSION"
+                  if gh release view "$TAG" &>/dev/null; then
+                    echo "Release already exists: $TAG"
+                    echo "exists=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "No existing release found for: $TAG"
+                    echo "exists=false" >> $GITHUB_OUTPUT
+                  fi
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Create GitHub Release
+              if: steps.changelog.outputs.is_unreleased != 'true' && steps.check_release.outputs.exists == 'false'
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: v${{ steps.changelog.outputs.version }}
+                  name: "Release v${{ steps.changelog.outputs.version }}"
+                  body: ${{ steps.changelog.outputs.notes }}
+                  draft: false
+                  prerelease: ${{ contains(steps.changelog.outputs.version, '-') }}
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

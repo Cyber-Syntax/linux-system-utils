@@ -15,8 +15,8 @@ This file provides guidance to agents when working with code in this repository.
 4. **ALWAYS** use `ruff check <filepath>` on each python file you modify to ensure proper formatting and linting.
     - Use `ruff format <filepath>` on each python file you modify to ensure proper formatting.
     - Use `ruff check --fix <filepath>` on each python file you modify to fix any fixable errors.
-4. **ALWAYS** use `shellcheck` on each file you modify to ensure proper formatting and linting. This runs both syntax and lint checks on individual files. Unless you want to lint and format multiple files, then use `shellcheck -f` and `shellcheck -l` instead.
-5. When creating bash scripts, prefer plain bash constructs and avoid unnecessary complexity. Keep functions small and focused. Use built-in bash features where appropriate, but avoid overusing them.
+5. **ALWAYS** use `shellcheck` on each file you modify to ensure proper formatting and linting. This runs both syntax and lint checks on individual files. Unless you want to lint and format multiple files, then use `shellcheck -f` and `shellcheck -l` instead.
+6. When creating bash scripts, prefer plain bash constructs and avoid unnecessary complexity. Keep functions small and focused. Use built-in bash features where appropriate, but avoid overusing them.
 
 ## Testing Instructions
 

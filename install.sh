@@ -39,6 +39,7 @@ SCRIPT_DIRS["package-management"]="${INSTALL_DIR}/package-management"
 SCRIPT_DIRS["power"]="${INSTALL_DIR}/power"
 SCRIPT_DIRS["web-scrapping"]="${INSTALL_DIR}/web-scrapping"
 SCRIPT_DIRS["website"]="${INSTALL_DIR}/website"
+SCRIPT_DIRS["virt"]="${INSTALL_DIR}/virt"
 
 # Print usage information
 print_usage() {

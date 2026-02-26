@@ -40,6 +40,11 @@ DRY_RUN=false
 MAIN=/mnt/nvme/developer
 
 # destination paths in the current environment
+#TODO: make sure these are backed up with borg or somethin
+#TODO2: move them to ~/dotfiles if they're not private or too large
+
+#TODO: clear dirs to avoid DRY principal violations, maybe we can make them one dir
+# and use front dir while copying
 SYNCTHING_DIR="$HOME/.config/syncthing"
 BROWSER_DIR="$HOME/.zen/"
 DOCUMENTS_DIR="$HOME/Documents"
@@ -51,6 +56,8 @@ FONTS_DIR="$HOME/.local/share/fonts/"
 PICTURES_DIR="$HOME/Pictures/"
 PHOTOS_DIR="$HOME/Photos/"
 VIDEOS_DIR="$HOME/Videos/"
+ZOXIDEDB_DIR="$HOME/.local/share/zoxide/db.zo"
+#TODO: easy-effect dirs
 
 # relative paths under MAIN used as sources
 SYNCTHING_SRC=".config/syncthing/"
@@ -64,8 +71,7 @@ FONTS_SRC=".local/share/fonts/"
 PICTURES_SRC="Pictures/"
 PHOTOS_SRC="Photos/"
 VIDEOS_SRC="Videos/"
-
-
+ZOXIDEDB_SRC=".local/share/zoxide/db.zo"
 
 # generic rsync wrapper
 sync_with_rsync() {
@@ -105,16 +111,21 @@ sync_all() {
   copy_from_main "$PICTURES_SRC" "$PICTURES_DIR"
   copy_from_main "$PHOTOS_SRC" "$PHOTOS_DIR"
   copy_from_main "$VIDEOS_SRC" "$VIDEOS_DIR"
+  copy_from_main "$ZOXIDEDB_SRC" "$ZOXIDEDB_DIR"
 }
 
 # display usage message
 usage() {
   cat <<'EOF'
-Usage: $(basename "$0") [-n|--dry-run] [all|syncthing|browser|documents|zed|keyrings|dotfiles|freetube|fonts|pictures|photos|videos]
+Usage: $(basename "$0") [-n|--dry-run] [all|syncthing|browser|
+    documents|zed|keyrings|dotfiles|freetube|fonts|pictures|photos|
+    videos|zoxidedb]
 
-Without arguments or with "all" the script copies every configured directory.
-The -n/--dry-run flag will run rsync in dry‑run mode and simply show what would
-be copied; this is useful for validating paths before making changes.
+Without arguments or with "all" the script copies every configured
+    directory.
+The -n/--dry-run flag will run rsync in dry‑run mode and simply show
+    what would be copied; this is useful for validating paths before
+    making changes.
 You can also request a single item by name.
 EOF
 }
@@ -169,6 +180,9 @@ main() {
     ;;
   videos)
     copy_from_main "$VIDEOS_SRC" "$VIDEOS_DIR"
+    ;;
+  zoxidedb)
+    copy_from_main "$ZOXIDEDB_SRC" "$ZOXIDEDB_DIR"
     ;;
   *)
     echo "Unknown target: $1" >&2

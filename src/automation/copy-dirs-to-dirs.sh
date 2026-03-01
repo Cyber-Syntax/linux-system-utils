@@ -57,7 +57,7 @@ PICTURES_DIR="$HOME/Pictures/"
 PHOTOS_DIR="$HOME/Photos/"
 VIDEOS_DIR="$HOME/Videos/"
 ZOXIDEDB_DIR="$HOME/.local/share/zoxide/db.zo"
-#TODO: easy-effect dirs
+EASY_EFFECT_DIR="$HOME/.config/easyeffects/"
 
 # relative paths under MAIN used as sources
 SYNCTHING_SRC=".config/syncthing/"
@@ -72,6 +72,7 @@ PICTURES_SRC="Pictures/"
 PHOTOS_SRC="Photos/"
 VIDEOS_SRC="Videos/"
 ZOXIDEDB_SRC=".local/share/zoxide/db.zo"
+EASY_EFFECT_SRC=".config/easyeffects/"
 
 # generic rsync wrapper
 sync_with_rsync() {
@@ -112,14 +113,14 @@ sync_all() {
   copy_from_main "$PHOTOS_SRC" "$PHOTOS_DIR"
   copy_from_main "$VIDEOS_SRC" "$VIDEOS_DIR"
   copy_from_main "$ZOXIDEDB_SRC" "$ZOXIDEDB_DIR"
-}
-
+  copy_from_main "$EASY_EFFECT_SRC" "$EASY_EFFECT_DIR"
+} 
 # display usage message
 usage() {
   cat <<'EOF'
 Usage: $(basename "$0") [-n|--dry-run] [all|syncthing|browser|
     documents|zed|keyrings|dotfiles|freetube|fonts|pictures|photos|
-    videos|zoxidedb]
+    videos|zoxidedb|easyeffects]
 
 Without arguments or with "all" the script copies every configured
     directory.
@@ -183,6 +184,9 @@ main() {
     ;;
   zoxidedb)
     copy_from_main "$ZOXIDEDB_SRC" "$ZOXIDEDB_DIR"
+    ;;
+  easyeffects)
+    copy_from_main "$EASY_EFFECT_SRC" "$EASY_EFFECT_DIR"
     ;;
   *)
     echo "Unknown target: $1" >&2

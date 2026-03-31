@@ -30,7 +30,14 @@ if [ "$show_cpu" = false ] && [ "$show_gpu" = false ] && [ "$show_nvme" = false 
 fi
 
 if [ "$show_cpu" = true ]; then
-    temp=$(sensors | grep 'Tdie:' | grep -oE '[0-9]+\.[0-9]+' | head -n1)
+    sensors_output=$(sensors)
+    temp=$(printf '%s\n' "$sensors_output" | grep -m1 'Tdie:' | grep -oE '[+-][0-9]+(\.[0-9]+)?' | head -n1 | tr -d '+')
+    if [ -z "$temp" ]; then
+        temp=$(printf '%s\n' "$sensors_output" | grep -m1 '^CPU:' | grep -oE '[+-][0-9]+(\.[0-9]+)?' | head -n1 | tr -d '+')
+    fi
+    if [ -z "$temp" ]; then
+        temp=$(printf '%s\n' "$sensors_output" | grep -m1 'Package id 0:' | grep -oE '[+-][0-9]+(\.[0-9]+)?' | head -n1 | tr -d '+')
+    fi
     temp=${temp:-0}
     echo "CPU: ${temp}°C"
 fi

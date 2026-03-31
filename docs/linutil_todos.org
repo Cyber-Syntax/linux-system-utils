@@ -4,8 +4,27 @@
 * 📝 TEST
 ** DONE make a simple script to copy home dirs when specified the paths for easy distro hop
 ** DONE borgbackup scripts now moved the auto-penguin-setup cli tools to automate borgbackup setup process. Remove it safely.
-
+** TESTING testing arch-package-manager.sh
+- State "TESTING"    from "TODO"       [2026-03-05 Prş 21:56]
+- update arch
+- get --status output
+- add to exec-if on polybar
+- test is it hide
+- if not, refactor script to output up-to-date output
 * 🔁 DOING
+** BUG arch-package management
+*** BUG timeout
+#+begin_src bash
+./src/package-management/arch-package-manager.sh --status
+Pacman: TIMEOUT | Paru: ✓
+#+end_src
+*** DONE `Pacman: ERROR | Paru: 1` when pacman is show empty:
+```bash
+➜ checkupdates
+
+~
+❯
+````
 ** TODO make scrap script better to get only content? article tags etc.?
 ** TODO P2: make sytemd-service for cleanup superproductivity backups?
 ** TODO P1: better script location ~/scripts instead of ~/.local/share/linux-system-utils ?
@@ -55,9 +74,8 @@ watch -n1 "grep 'cpu MHz' /proc/cpuinfo"
     - we might be fetch the updates again quickly after update option called.
 ** TODO ~/Documents/mysql/backup add cleanup util script
 ** TODO deploy.sh --dev is copy .git files to share location
-
 * 📥 BACKLOG
-** TODO BUG: idle.sh not stop when using zoom etc. which there is no playerctl
+** BACKLOG BUG: idle.sh not stop when using zoom etc. which there is no playerctl
 **** TODO add audio logic to detected via playerctl and than pactl and than proc/asound location
 **** TODO add option to detect fullscreen and disable idle
 **** TODO Add option to decrease brightness before lock
@@ -66,6 +84,5 @@ watch -n1 "grep 'cpu MHz' /proc/cpuinfo"
 ```bash
 abrt-server[475559]: Deleting problem directory '/var/spool/abrt/ccpp-2025-11-21-14:46:08.135431-2664'
 ```
-
 * ✅ DONE
 ** DONE BUG: idle.sh send 2-3 audio detected notification.

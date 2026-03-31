@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+#
+# VERSION: 1.0.0
 
 # Copyright (c) 2026, Cyber-Syntax Serif
 
@@ -30,17 +32,6 @@
 # This script provides both status checking and update functionality for
 # Arch Linux (pacman) packages and AUR (paru) applications.
 #
-# TODO: make sure that all of the cleanup, update is securely can be useable
-# `sudo pacman -Syu` is best for update
-# other clenaups need research more
-# paru update need special care like -diff to see changes for more secure
-#
-# use also `arch-audit` command to check cve for current packages etc.
-# `-u` command can show only upgradeables which would be fixed one, so we can
-# install those to more secure system instead of bothering non-fixed ones
-# which `-c` command show all of the other CVE risk packages but there isn't
-# fix for those, so we can just know about those and wait for the fix instead
-# of installing those which may cause more risk to the system.
 
 # --- Constants ---
 
@@ -128,19 +119,29 @@ get_pacman_update_count() {
   # without synchronizing the database, thus avoiding partial upgrade issues when
   # later attempting to use pacman -S package to install packages.
 
-  # FIXME: currently checkupdates give erorr on virt-manager: checkupdates ERROR: Cannot fetch updates
-  pacman_output=$(timeout 15 bash -c "checkupdates" 2>/dev/null)
+  # `checkupdates` prints update lines to stdout when updates exist.
+  # When the system is up-to-date it commonly prints nothing and exits non-zero
+  # (often exit code 2). Treat empty output as "0" (no updates).
+  pacman_output=$(timeout 15 checkupdates 2>&1)
   pacman_exit_status=$?
 
-  if [ $pacman_exit_status -eq $PACMAN_EXIT_OK ]; then
-    # Count the number of update lines
-    count=$(echo "$pacman_output" | grep -v "^$" | grep -c '^')
-  elif [ $pacman_exit_status -eq 124 ]; then # Timeout
-    count="!"
-  else
-    count="?"
+  if [ $pacman_exit_status -eq 124 ]; then # Timeout
+    echo "!"
+    return
   fi
-  echo "$count"
+
+  if [ -z "$pacman_output" ]; then
+    echo "0"
+    return
+  fi
+
+  # Count only valid update lines ("pkg old -> new"); anything else is an error.
+  count=$(printf '%s\n' "$pacman_output" | grep -E -c '^[^[:space:]]+[[:space:]]+[^[:space:]]+[[:space:]]+->')
+  if [ "$count" -gt 0 ] 2>/dev/null; then
+    echo "$count"
+  else
+    echo "?"
+  fi
 }
 
 # Function to check paru (AUR) updates

@@ -291,22 +291,22 @@ uv tool install --upgrade git+https://github.com/Cyber-Syntax/my-unicorn
 ### Configuration Structure
 
 - Configuration stored in `~/.config/my-unicorn/`:
-  - `settings.conf` - Global configuration file (GLOBAL_CONFIG_VERSION="1.1.0")
-  - `cache/releases/` - Cache files, filtered for AppImage/checksums only (Windows, mac removed)
-    - `AppFlowy-IO_AppFlowy.json` - AppFlowy cache config
-    - `zen-browser_desktop.json` - Zen Browser cache config
-  - `logs/` - Log files for my-unicorn
-  - `apps/` - AppImages state data folder (APP_CONFIG_VERSION="2.0.0")
-    - `appflowy.json` - AppFlowy app config
-    - `zen-browser.json` - Zen Browser app config
-    - `backups/` - Config backups created during migration
+    - `settings.conf` - Global configuration file (GLOBAL_CONFIG_VERSION="1.1.0")
+    - `cache/releases/` - Cache files, filtered for AppImage/checksums only (Windows, mac removed)
+        - `AppFlowy-IO_AppFlowy.json` - AppFlowy cache config
+        - `zen-browser_desktop.json` - Zen Browser cache config
+    - `logs/` - Log files for my-unicorn
+    - `apps/` - AppImages state data folder (APP_CONFIG_VERSION="2.0.0")
+        - `appflowy.json` - AppFlowy app config
+        - `zen-browser.json` - Zen Browser app config
+        - `backups/` - Config backups created during migration
 
 ### AppImage Management
 
 - AppImages are downloaded to user-specified directory
 - Desktop entries are created in `~/.local/share/applications/`
 - Icons are extracted from AppImages and stored to user-specified directory
-  - Default `~/Applications` for appimages, backups, and icons
+    - Default `~/Applications` for appimages, backups, and icons
 - Hash verification (SHA256/SHA512) is performed on available assets
 
 ### GitHub API Interaction
@@ -323,11 +323,11 @@ uv tool install --upgrade git+https://github.com/Cyber-Syntax/my-unicorn
 - Migrations are detected and notified on startup
 - Backups are created in `~/.config/my-unicorn/apps/backups/`
 - Migration logic is in `config/migration/` directory
-  - `global_config.py` - Global INI config migrations
-  - `app_config.py` - Per-app JSON config migrations
+    - `global_config.py` - Global INI config migrations
+    - `app_config.py` - Per-app JSON config migrations
 - Always bump VERSION constants in `constants.py` when changing config schema
-  - `GLOBAL_CONFIG_VERSION` - Currently "1.1.0"
-  - `APP_CONFIG_VERSION` - Currently "2.0.0"
+    - `GLOBAL_CONFIG_VERSION` - Currently "1.1.0"
+    - `APP_CONFIG_VERSION` - Currently "2.0.0"
 
 ## Additional Resources
 

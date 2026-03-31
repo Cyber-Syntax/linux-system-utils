@@ -3,10 +3,10 @@
 ## testing
 
 - [x] make a simple script to copy home dirs when specified the paths for easy distro hop
-- [x] borgbackup scripts now moved the auto-penguin-setup cli tools to automate borgbackup setup process. Remove it safely.
 
 ## in-progress
 
+- [ ] borgbackup scripts now moved the auto-penguin-setup cli tools to automate borgbackup setup process. Remove it safely.
 - [ ] make scrap script better to get only content? article tags etc.?
 - [ ] P2: make sytemd-service for cleanup superproductivity backups?
 - [ ] P1: better script location ~/scripts instead of ~/.local/share/linux-system-utils ?

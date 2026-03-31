@@ -26,17 +26,20 @@ CONFIG_DIR="${XDG_CONFIG_HOME}/linux-system-utils"
 
 # Define script categories and their installation paths
 declare -A SCRIPT_DIRS
-SCRIPT_DIRS["system"]="${INSTALL_DIR}/system"
+SCRIPT_DIRS["audio"]="${INSTALL_DIR}/audio"
+SCRIPT_DIRS["automation"]="${INSTALL_DIR}/automation"
+SCRIPT_DIRS["backup"]="${INSTALL_DIR}/backup"
+SCRIPT_DIRS["display"]="${INSTALL_DIR}/display"
+SCRIPT_DIRS["games"]="${INSTALL_DIR}/games"
+SCRIPT_DIRS["general"]="${INSTALL_DIR}/general"
 SCRIPT_DIRS["github"]="${INSTALL_DIR}/github"
 SCRIPT_DIRS["hardware"]="${INSTALL_DIR}/hardware"
-SCRIPT_DIRS["games"]="${INSTALL_DIR}/games"
-SCRIPT_DIRS["audio"]="${INSTALL_DIR}/audio"
-SCRIPT_DIRS["display"]="${INSTALL_DIR}/display"
-SCRIPT_DIRS["automation"]="${INSTALL_DIR}/automation"
-SCRIPT_DIRS["general"]="${INSTALL_DIR}/general"
+SCRIPT_DIRS["migration"]="${INSTALL_DIR}/migration"
 SCRIPT_DIRS["network"]="${INSTALL_DIR}/network"
 SCRIPT_DIRS["package-management"]="${INSTALL_DIR}/package-management"
 SCRIPT_DIRS["power"]="${INSTALL_DIR}/power"
+SCRIPT_DIRS["system"]="${INSTALL_DIR}/system"
+SCRIPT_DIRS["virt"]="${INSTALL_DIR}/virt"
 SCRIPT_DIRS["web-scrapping"]="${INSTALL_DIR}/web-scrapping"
 SCRIPT_DIRS["website"]="${INSTALL_DIR}/website"
 
@@ -225,7 +228,8 @@ install_from_main() {
   fi
 
   # Remove unwanted folders
-  local unwanted_dirs=("backup" "containers")
+  # NOTE: src/backup folder has useful scripts, avoid deleting it
+  local unwanted_dirs=("containers")
   for unwanted in "${unwanted_dirs[@]}"; do
     if [[ -d "$INSTALL_DIR/src/$unwanted" ]]; then
       rm -rf "$INSTALL_DIR/src/$unwanted"

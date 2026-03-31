@@ -1,0 +1,88 @@
+#+title: Todo TODOS
+#+author: Cyber-Syntax
+
+* 📝 TEST
+** DONE make a simple script to copy home dirs when specified the paths for easy distro hop
+** DONE borgbackup scripts now moved the auto-penguin-setup cli tools to automate borgbackup setup process. Remove it safely.
+** TESTING testing arch-package-manager.sh
+- State "TESTING"    from "TODO"       [2026-03-05 Prş 21:56]
+- update arch
+- get --status output
+- add to exec-if on polybar
+- test is it hide
+- if not, refactor script to output up-to-date output
+* 🔁 DOING
+** BUG arch-package management
+*** BUG timeout
+#+begin_src bash
+./src/package-management/arch-package-manager.sh --status
+Pacman: TIMEOUT | Paru: ✓
+#+end_src
+*** DONE `Pacman: ERROR | Paru: 1` when pacman is show empty:
+```bash
+➜ checkupdates
+
+~
+❯
+````
+** TODO make scrap script better to get only content? article tags etc.?
+** TODO P2: make sytemd-service for cleanup superproductivity backups?
+** TODO P1: better script location ~/scripts instead of ~/.local/share/linux-system-utils ?
+**** TODO Main problem for this; I don't use qtile anymore but fedora-package-management.sh is outdated so script try to do that with old code...
+**** TODO We also need to update linux-system-utils script to make sure about to updates and version check for this script, so maybe we can make a bin to do that or maybe we can make a cli tool directly related for this scripts?
+**** TODO move some scripts direclty to bin like changelog script to be able to call it like a installed script which we need it for example for the superproductivity clean script because it is already able to remove it from anywhere like, any path without issue.
+**** TODO P1: Use symlinks to ~/.local/bin/ direclty, so it would be up to date all the time?
+**** TODO Each scripts prints its own git version
+**** TODO Add auto updater `my-tools-update` which do git pull and start the install.sh from the linux-system-utils repo or git repo if not exist?
+**** TODO Your install script should:
+  Detect broken symlinks
+  Refuse to overwrite real files
+  Validate executables
+```bash
+~/src/my-tools/        # Git repo (authoritative)
+├── bin/
+│   ├── mytool
+│   └── othertool
+├── share/
+│   └── completions/
+└── install.sh
+```
+```bash
+mytool --version
+# mytool v1.4.2 (commit abc123)
+```
+** TODO implement copy_agents.sh
+** TODO don't bother with rsync script: <https://github.com/deajan/osync?tab=readme-ov-file#quick-sync-mode>
+** TODO check more: <https://wiki.archlinux.org/title/Synchronization_and_backup_programs>
+** TODO make changelog_commits.md rewrite the all file instead of append which
+      we are going to keep the changelog_commits.md file in project dirs all the time
+      and it would be much better to not append the same commits over and over again.
+** TODO lets move linux-system-utils name to scripts or another.
+** TODO add a useful small bash script cli to get current memory ghz, cpu ghz
+** TODO Make a arch and fedora package manager for polybar instead only fedora.
+** TODO use all.sh in that directory and source them, one for detection distro,
+      one of pacman.sh one for dnf.sh one for flatpak.sh would be better.
+```bash
+watch -n1 "grep 'cpu MHz' /proc/cpuinfo"
+```
+
+* 🔲 TODO
+** TODO make spotify .cache/spotify/data/\* removal script weekly
+** TODO Refactor the path on WM's to the repo installed xdg base dir
+** TODO add auto-cpufreq on desktop
+** TODO checkbox need to be shown when the update script called and if it successfully update all the packages
+    - we might be fetch the updates again quickly after update option called.
+** TODO ~/Documents/mysql/backup add cleanup util script
+** TODO deploy.sh --dev is copy .git files to share location
+* 📥 BACKLOG
+** BACKLOG BUG: idle.sh not stop when using zoom etc. which there is no playerctl
+**** TODO add audio logic to detected via playerctl and than pactl and than proc/asound location
+**** TODO add option to detect fullscreen and disable idle
+**** TODO Add option to decrease brightness before lock
+**** TODO decrease brightness after 20% battery
+**** DONE fedora 42 not suspend successfully -> it probably because of nfancurve.service, now disabled.
+```bash
+abrt-server[475559]: Deleting problem directory '/var/spool/abrt/ccpp-2025-11-21-14:46:08.135431-2664'
+```
+* ✅ DONE
+** DONE BUG: idle.sh send 2-3 audio detected notification.

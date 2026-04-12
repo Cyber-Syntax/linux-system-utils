@@ -125,6 +125,8 @@ install_binaries() {
   local changelog_src="${INSTALL_DIR}/github/changelog.sh"
   local copy_agents_src="${INSTALL_DIR}/github/copy_agents.sh"
   local scrap_src="${INSTALL_DIR}/web-scrapping/scrap.py"
+  local clean_sp_backups_src="${INSTALL_DIR}/system/maintenance/clean-sp-backups.sh"
+  local gc_cache_src="${INSTALL_DIR}/system/maintenance/gc_cache.sh"
 
   if [[ -f "$scrap_src" ]]; then
     copy_script "$scrap_src" "${BIN_DIR}/scrap"
@@ -145,6 +147,20 @@ install_binaries() {
     log_success "Installed copy_agents command to: ${BIN_DIR}/copy_agents"
   else
     log_warn "copy_agents.sh not found in installation directory"
+  fi
+
+  if [[ -f "$clean_sp_backups_src" ]]; then
+    copy_script "$clean_sp_backups_src" "${BIN_DIR}/clean-sp-backups"
+    log_success "Installed clean-sp-backups command to: ${BIN_DIR}/clean-sp-backups"
+  else
+    log_warn "clean-sp-backups.sh not found in installation directory"
+  fi
+
+  if [[ -f "$gc_cache_src" ]]; then
+    copy_script "$gc_cache_src" "${BIN_DIR}/gc_cache"
+    log_success "Installed gc_cache command to: ${BIN_DIR}/gc_cache"
+  else
+    log_warn "gc_cache.sh not found in installation directory"
   fi
 }
 

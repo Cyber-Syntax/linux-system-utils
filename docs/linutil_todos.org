@@ -12,6 +12,8 @@
 - test is it hide
 - if not, refactor script to output up-to-date output
 * 🔁 DOING
+** TODO make new copy_instructions.sh to specifically send it to repos
+- sendin specific instruction to repos make it more better for ai to read needed
 ** BUG arch-package management
 *** BUG timeout
 #+begin_src bash

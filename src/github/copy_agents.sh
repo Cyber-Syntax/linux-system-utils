@@ -92,6 +92,10 @@ readonly INSTRUCTION_FILES=(
   "github-actions-ci-cd-best-practices.instructions.md"
   "agents.instructions.md"
   "agent-skills.instructions.md"
+  "code-review-generic.instructions.md"
+  "context7.instructions.md"
+  "makefile.instructions.md"
+  "oop-design-patterns.instructions.md"
 )
 
 readonly AGENT_FILES=(
@@ -118,6 +122,29 @@ readonly AGENT_FILES=(
   "prd.agent.md"
   "gilfoyle.agent.md"
 )
+
+#TODO: prompts no longer available on awesome-copilot repo
+# Processing prompts files...
+#   Warning: Source file not found: review-and-refactor.prompt.md
+#   Warning: Source file not found: boost-prompt.prompt.md
+#   Warning: Source file not found: create-github-issue-feature-from-specification.prompt.md
+#   Warning: Source file not found: pytest-coverage.prompt.md
+#   Warning: Source file not found: create-readme.prompt.md
+#   Warning: Source file not found: conventional-commit.prompt.md
+#   Warning: Source file not found: create-architectural-decision-record.prompt.md
+#   Warning: Source file not found: add-educational-comments.prompt.md
+#   Warning: Source file not found: update-implementation-plan.prompt.md
+#   Warning: Source file not found: code-exemplars-blueprint-generator.prompt.md
+#   Warning: Source file not found: update-oo-component-documentation.prompt.md
+#   Warning: Source file not found: create-oo-component-documentation.prompt.md
+#   Warning: Source file not found: create-agentsmd.prompt.md
+#   Warning: Source file not found: generate-custom-instructions-from-codebase.prompt.md
+#   Warning: Source file not found: technology-stack-blueprint-generator.prompt.md
+#   Warning: Source file not found: tldr-prompt.prompt.md
+#   Warning: Source file not found: architecture-blueprint-generator.prompt.md
+#   Warning: Source file not found: folder-structure-blueprint-generator.prompt.md
+#   Warning: Source file not found: copilot-instructions-blueprint-generator.prompt.md
+#   Warning: Source file not found: write-coding-standards-from-file.prompt.md
 
 readonly PROMPT_FILES=(
   "review-and-refactor.prompt.md"
@@ -147,6 +174,14 @@ readonly SKILLS=(
   "prd"
   "refactor"
   "git-commit"
+  "github-issues"
+  "gh-cli"
+  "review-and-refactor"
+  "refactor"
+  "refactor-plan"
+  "pytest-coverage"
+  "github-copilot-starter"
+  "documentation-writer"
 )
 
 # Counters for summary
@@ -355,8 +390,9 @@ main() {
   process_files "agents" "agents" "${AGENT_FILES[@]}"
   echo
 
-  process_files "prompts" "prompts" "${PROMPT_FILES[@]}"
-  echo
+  #TODO: prompts no longer available on awesome-copilot repo
+  # process_files "prompts" "prompts" "${PROMPT_FILES[@]}"
+  # echo
 
   process_skills
   echo

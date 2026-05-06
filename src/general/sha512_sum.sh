@@ -11,6 +11,11 @@ FILE_NEW="superProductivity-x86_64.AppImage"
 BASE64_OLD="SndpKa23Whc58K9AHGMykvMgH/SBaL2ZTsDXh6ilv7sl6eZjYSpQQ2n6Fr/1WZ2hzjgPLtPrF5r5SjlewHdSbA=="
 BASE64_NEW="NVXO9SPnvs7klqwnH3zJxt7U3+L0T/MDBWtdN/NJEmb6XMVs4IyaAJbRdOld29PjSei9z9xoOEnYOZioHZmk3w=="
 
+# function to decode Base64 and convert to hex
+decode_base64() {
+  echo "$1" | base64 -d | xxd -p -c 256
+}
+
 # Function to calculate and print details for a file
 compare_hashes() {
   local file=$1
@@ -25,7 +30,7 @@ compare_hashes() {
 
   # Decode Base64 and convert to hex
   local decoded_hex
-  decoded_hex=$(echo "$base64_str" | base64 -d | xxd -p -c 256)
+  decoded_hex=$(decode_base64 "$base64_str")
   echo "Base64-decoded hex: $decoded_hex"
 
   # Compare and print results
@@ -38,11 +43,21 @@ compare_hashes() {
   echo "--------------------------------------------"
 }
 
-# Compare the old version
-compare_hashes "$FILE_OLD" "$BASE64_OLD"
+# # Compare the old version
+# compare_hashes "$FILE_OLD" "$BASE64_OLD"
 
-# Compare the new version
-compare_hashes "$FILE_NEW" "$BASE64_NEW"
+# # Compare the new version
+# compare_hashes "$FILE_NEW" "$BASE64_NEW"
+
+# cli usage --compare <file> <base64_hash>
+if [[ "$1" == "--compare" ]]; then
+  compare_hashes "$2" "$3"
+fi
+
+# convert base64 to hex --convert <base64_str>
+if [[ "$1" == "--convert" ]]; then
+  decode_base64 "$2"
+fi
 
 ## OUTPUT
 # ╰─❯ sh test.sh                                                                                                                                                    ─╯

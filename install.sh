@@ -127,6 +127,7 @@ install_binaries() {
   local scrap_src="${INSTALL_DIR}/web-scrapping/scrap.py"
   local clean_sp_backups_src="${INSTALL_DIR}/system/maintenance/clean-sp-backups.sh"
   local gc_cache_src="${INSTALL_DIR}/system/maintenance/gc_cache.sh"
+  local run_llama="${INSTALL_DIR}/automation/run_llama.sh"
 
   if [[ -f "$scrap_src" ]]; then
     copy_script "$scrap_src" "${BIN_DIR}/scrap"
@@ -161,6 +162,13 @@ install_binaries() {
     log_success "Installed gc_cache command to: ${BIN_DIR}/gc_cache"
   else
     log_warn "gc_cache.sh not found in installation directory"
+  fi
+
+  if [[ -f "$run_llama" ]]; then
+    copy_script "$run_llama" "${BIN_DIR}/run_llama"
+    log_success "Installed run_llama command to: ${BIN_DIR}/run_llama"
+  else
+    log_warn "run_llama.sh not found in installation directory"
   fi
 }
 

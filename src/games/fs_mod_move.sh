@@ -2,7 +2,7 @@
 # This script moves all Farming Simulator mods (starting with FS25_) to the game mod directory
 
 #WARNING: Change the MOD_DIR variable to your actual mod directory path
-MOD_DIR="/mnt/backups/epicgames/Heroic/Prefixes/default/Farming Simulator 25/drive_c/users/steamuser/Documents/My Games/FarmingSimulator2025/mods"
+MOD_DIR="/mnt/win/Users/Admin/Documents/My Games/FarmingSimulator2025/mods"
 
 # Change this according to your farming simulator version
 VERSION="FS25"
